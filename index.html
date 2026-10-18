@@ -299,6 +299,7 @@
     .btn-scanner { background: #1d4ed8; border: 1px solid #3b82f6; }
     .btn-green { background: #1b4d3e; border: 1px solid #2ecc71; }
     .btn-whatsapp { background: #25d366; color: #000; }
+    .btn-danger { background: #dc2626; color: #fff; padding: 4px 8px; font-size: 0.75rem; border-radius: 4px; }
 
     .btn-preset {
       background: #1e293b;
@@ -311,7 +312,7 @@
       flex: 1;
     }
 
-    #reader {
+    #reader, #hubReader {
       width: 100%;
       border-radius: 8px;
       overflow: hidden;
@@ -370,7 +371,6 @@
       flex-direction: column;
       gap: 12px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-      position: relative;
     }
 
     /* Membership Card Frame */
@@ -483,7 +483,7 @@
 
     <!-- Receipt Action Buttons -->
     <div style="display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 380px; margin-top: 10px;">
-      <button class="btn btn-whatsapp" onclick="sendWhatsAppReceipt()">
+      <button class="btn btn-whatsapp" onclick="sendWhatsAppReceiptModal()">
         <i class="fa-brands fa-whatsapp"></i> হোয়াটসঅ্যাপে রসিদ পাঠান
       </button>
       <button class="btn btn-green" onclick="downloadReceiptPNG()">
@@ -511,7 +511,7 @@
     <!-- Navigation Tabs -->
     <div class="tab-nav">
       <button class="tab-btn active" onclick="switchTab('posTab', event)"><i class="fa-solid fa-cash-register"></i> পিওএস ও ট্র্যাকিং</button>
-      <button class="tab-btn" onclick="switchTab('cardTab', event)"><i class="fa-solid fa-id-card"></i> মেম্বারশিপ হাব ও সার্চ</button>
+      <button class="tab-btn" onclick="switchTab('cardTab', event)"><i class="fa-solid fa-id-card"></i> মেম্বারশিপ হাব ও স্ক্যানার</button>
     </div>
 
     <!-- TAB 1: POS & INCOME TRACKER -->
@@ -596,7 +596,7 @@
 
       <!-- History Table -->
       <div class="panel">
-        <div class="panel-title"><i class="fa-solid fa-clock-rotate-left"></i> সাম্প্রতিক লেনদেনের ইতিহাস</div>
+        <div class="panel-title"><i class="fa-solid fa-clock-rotate-left"></i> সাম্প্রতিক লেনদেনের ইতিহাস ও রসিদ ডিলিট</div>
         <div style="overflow-x: auto;">
           <table class="history-table">
             <thead>
@@ -606,10 +606,11 @@
                 <th>টাইপ</th>
                 <th>টাকা</th>
                 <th>পয়েন্ট</th>
+                <th>অ্যাকশন</th>
               </tr>
             </thead>
             <tbody id="historyTableBody">
-              <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">ডাটা লোড হচ্ছে...</td></tr>
+              <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">ডাটা লোড হচ্ছে...</td></tr>
             </tbody>
           </table>
         </div>
@@ -617,19 +618,24 @@
 
     </div>
 
-    <!-- TAB 2: MEMBERSHIP CARD ISSUANCE & SEARCH -->
+    <!-- TAB 2: MEMBERSHIP CARD ISSUANCE & HUB -->
     <div id="cardTab" class="tab-content">
       
-      <!-- MEMBER SEARCH PANEL -->
+      <!-- MEMBER HUB SCANNER & DETAILS ATTACH -->
       <div class="panel" style="border-color: var(--gold-accent);">
-        <div class="panel-title" style="color: var(--gold-accent);"><i class="fa-solid fa-magnifying-glass"></i> মেম্বার সার্চ ও মোট কেনাকাটা যাচাই</div>
-        <div class="input-row">
+        <div class="panel-title" style="color: var(--gold-accent);"><i class="fa-solid fa-qrcode"></i> মেম্বার হাব স্ক্যানার ও তথ্য সংযুক্তকরণ</div>
+        <button class="btn btn-scanner" onclick="toggleHubScanner()">
+          <i class="fa-solid fa-camera"></i> মেম্বার কার্ড স্ক্যান করুন (অটো-অ্যাটাচ)
+        </button>
+        <div id="hubReader"></div>
+        <div class="input-row" style="margin-top: 10px;">
           <div class="input-group">
-            <input type="text" id="searchMemberId" placeholder="মেম্বার আইডি লিখুন (যেমন: SKR-123456)">
+            <label>মেম্বার আইডি:</label>
+            <input type="text" id="hubCardId" placeholder="আইডি লিখুন বা স্ক্যান করুন" oninput="loadHubMember()">
           </div>
-          <button class="btn" style="width: 120px; flex: none;" onclick="searchMemberSpending()">খুঁজুন</button>
+          <button class="btn" style="width: 100px; flex: none;" onclick="loadHubMember()">লোড</button>
         </div>
-        <div id="searchResultBox" style="background: #0f172a; padding: 12px; border-radius: 8px; font-size: 0.9rem; display: none; margin-top: 5px;"></div>
+        <div id="hubDetailsBox" style="background: #0f172a; padding: 12px; border-radius: 8px; font-size: 0.9rem; display: none; margin-top: 5px;"></div>
       </div>
 
       <div class="panel">
@@ -646,6 +652,13 @@
               <input type="text" id="cardIdInput" readonly style="color: var(--gold-accent); font-weight: bold;">
               <button class="btn" style="padding: 0 12px;" onclick="generateNewCardID()">🔄</button>
             </div>
+          </div>
+        </div>
+
+        <div class="input-row">
+          <div class="input-group">
+            <label>হোয়াটসঅ্যাপ নম্বর:</label>
+            <input type="text" id="cardPhoneInput" placeholder="017xxxxxxxx">
           </div>
         </div>
 
@@ -701,6 +714,7 @@
     let transactions = [];
     let membersDatabase = {};
     let html5QrCode = null;
+    let hubQrCode = null;
     let lastReceiptData = null;
 
     function verifyPin() {
@@ -790,7 +804,6 @@
       });
     }
 
-    // Auto-fill member info when card ID is typed or scanned
     function autoFetchMember() {
       const cardID = document.getElementById('posCardID').value.trim().toUpperCase();
       if (membersDatabase[cardID]) {
@@ -800,29 +813,51 @@
       }
     }
 
-    function searchMemberSpending() {
-      const searchId = document.getElementById('searchMemberId').value.trim().toUpperCase();
-      const resBox = document.getElementById('searchResultBox');
-      
-      if (!searchId) {
-        alert("দয়া করে মেম্বার আইডি লিখুন।");
+    // Hub Scanner & Info Attach
+    function toggleHubScanner() {
+      const readerDiv = document.getElementById('hubReader');
+      if (readerDiv.style.display === 'block') {
+        if (hubQrCode) {
+          hubQrCode.stop().then(() => readerDiv.style.display = 'none').catch(e => {});
+        }
+      } else {
+        readerDiv.style.display = 'block';
+        hubQrCode = new Html5Qrcode("hubReader");
+        hubQrCode.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: 200, height: 200 } },
+          (decodedText) => {
+            document.getElementById('hubCardId').value = decodedText;
+            hubQrCode.stop().then(() => readerDiv.style.display = 'none');
+            loadHubMember();
+          },
+          (err) => {}
+        ).catch(err => {
+          alert("ক্যামেরা অন করা যায়নি।");
+          readerDiv.style.display = 'none';
+        });
+      }
+    }
+
+    function loadHubMember() {
+      const cardId = document.getElementById('hubCardId').value.trim().toUpperCase();
+      const box = document.getElementById('hubDetailsBox');
+      if (!cardId) {
+        alert("আইডি দিন।");
         return;
       }
-
-      resBox.style.display = 'block';
-
-      if (membersDatabase[searchId]) {
-        const m = membersDatabase[searchId];
-        resBox.innerHTML = `
-          ✅ <b>মেম্বার পাওয়া গেছে!</b><br>
+      box.style.display = 'block';
+      if (membersDatabase[cardId]) {
+        const m = membersDatabase[cardId];
+        box.innerHTML = `
+          ✅ <b>মেম্বার সংযুক্ত হয়েছে!</b><br>
+          🆔 আইডি: <b>${cardId}</b><br>
           👤 নাম: <b>${m.name}</b><br>
-          📞 ফোন: ${m.phone || 'নেই'}<br>
-          💰 মোট কেনাকাটা: <span style="color: var(--green-status); font-weight: bold;">৳ ${m.totalSpend.toFixed(2)}</span><br>
-          ⭐ মোট পয়েন্ট: <span style="color: var(--gold-accent); font-weight: bold;">${m.totalPoints.toFixed(2)}</span><br>
-          🛒 মোট ভিজিট/লেনদেন: ${m.purchasesCount} বার
+          📞 হোয়াটসঅ্যাপ: <span style="color: var(--green-status); font-weight: bold;">${m.phone || 'নেই'}</span><br>
+          💰 মোট কেনাকাটা: ৳${m.totalSpend.toFixed(2)} | ⭐ পয়েন্ট: ${m.totalPoints.toFixed(2)}
         `;
       } else {
-        resBox.innerHTML = `⚠️ কোনো মেম্বার পাওয়া যায়নি বা এই আইডি দিয়ে এখনো কোনো কেনাকাটা হয়নি।`;
+        box.innerHTML = `⚠️ এই কার্ড আইডি (${cardId}) দিয়ে কোনো রেকর্ড পাওয়া যায়নি।`;
       }
     }
 
@@ -904,13 +939,22 @@
         body: JSON.stringify(newTx)
       }).catch(err => console.error("Sheet sync error:", err));
 
-      // Show Digital Receipt Modal
       showReceiptModal(newTx);
 
       document.getElementById('posAmount').value = '';
       document.getElementById('posCardID').value = '';
       document.getElementById('posName').value = '';
       document.getElementById('posPhone').value = '';
+    }
+
+    function deleteReceipt(id) {
+      if (confirm("আপনি কি এই রসিদ বা লেনদেনটি মুছতে চান?")) {
+        transactions = transactions.filter(t => t.id !== id);
+        buildMembersDatabase();
+        renderHistory();
+        updateMetrics();
+        alert("🗑️ রসিদ সফলভাবে মুছে ফেলা হয়েছে!");
+      }
     }
 
     function showReceiptModal(tx) {
@@ -939,11 +983,13 @@
       });
     }
 
-    function sendWhatsAppReceipt() {
+    function sendWhatsAppReceiptModal() {
       if (!lastReceiptData) return;
-      const t = lastReceiptData;
+      sendWhatsAppDirect(lastReceiptData);
+    }
+
+    function sendWhatsAppDirect(t) {
       const phone = t.phone ? t.phone.replace(/[^0-9]/g, '') : '';
-      
       const msg = `🌸 *সাকুরা মার্কেট (আম্বরখানা, সিলেট)* 🌸\n` +
                   `📦 ডিজিটাল ই-রসিদ\n\n` +
                   `👤 নাম: ${t.name}\n` +
@@ -960,7 +1006,7 @@
     function renderHistory() {
       const tbody = document.getElementById('historyTableBody');
       if (transactions.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">কোনো লেনদেন নেই</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">কোনো লেনদেন নেই</td></tr>`;
         return;
       }
 
@@ -971,6 +1017,10 @@
           <td><span class="badge ${t.type === 'member' ? 'badge-member' : 'badge-guest'}">${t.type === 'member' ? 'মেম্বার' : 'গেস্ট'}</span></td>
           <td>৳ ${parseFloat(t.amount || 0).toFixed(2)}</td>
           <td style="color: ${parseFloat(t.points || 0) >= 0 ? 'var(--green-status)' : 'red'};">${parseFloat(t.points || 0) >= 0 ? '+' : ''}${parseFloat(t.points || 0).toFixed(2)}</td>
+          <td>
+            <button class="btn btn-whatsapp" style="padding: 4px 8px; font-size: 0.75rem; display: inline-flex;" onclick='sendWhatsAppDirect(${JSON.stringify(t)})' title="হোয়াটসঅ্যাপে পাঠান"><i class="fa-brands fa-whatsapp"></i></button>
+            <button class="btn btn-danger" onclick="deleteReceipt('${t.id}')" title="মুছে ফেলুন"><i class="fa-solid fa-trash"></i></button>
+          </td>
         </tr>
       `).join('');
     }
@@ -999,7 +1049,7 @@
     function updateCardVisual() {
       const name = document.getElementById('cardNameInput').value || '...................';
       document.getElementById('cardVisualName').innerText = name;
-    } 
+    }
 
     function downloadCardPNG() {
       const name = document.getElementById('cardNameInput').value.trim();

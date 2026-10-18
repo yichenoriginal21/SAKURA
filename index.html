@@ -505,7 +505,10 @@
           <p>আম্বরখানা, সিলেট • EST. 2026</p>
         </div>
       </div>
-      <div style="font-size: 0.85rem; color: var(--green-status);" id="syncStatus">🟢 শিট সিঙ্কড</div>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 0.85rem; color: var(--green-status);" id="syncStatus">🟢 শিট সিঙ্কড</span>
+        <button style="background: rgba(225,29,72,0.2); border: 1px solid var(--pink-primary); color: #fff; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;" onclick="logout()">🔒 লগআউট</button>
+      </div>
     </div>
 
     <!-- Navigation Tabs -->
@@ -541,7 +544,7 @@
         </div>
 
         <button class="btn btn-scanner" id="scanCameraBtn" onclick="toggleCameraScanner()">
-          <i class="fa-solid fa-camera"></i> ক্যামেরা দিয়ে মেম্বার QR স্ক্যান করুন
+          <i class="fa-solid fa-camera"></i> ক্যামেরা দিয়ে মেম্বার QR স্ক্যান করুন (অটো-অ্যাটাচ)
         </button>
         <div id="reader"></div>
 
@@ -550,7 +553,7 @@
             <div class="input-row" style="margin-bottom: 10px;">
               <div class="input-group">
                 <label>মেম্বার কার্ড আইডি / QR নম্বর:</label>
-                <input type="text" id="posCardID" placeholder="যেমন: SKR-123456" oninput="autoFetchMember()" onchange="autoFetchMember()">
+                <input type="text" id="posCardID" placeholder="যেমন: SKR-123456" oninput="autoFetchMember('pos')" onchange="autoFetchMember('pos')">
               </div>
             </div>
           </div>
@@ -621,25 +624,24 @@
     <!-- TAB 2: MEMBERSHIP CARD ISSUANCE & HUB -->
     <div id="cardTab" class="tab-content">
       
-      <!-- MEMBER HUB SCANNER & DETAILS ATTACH -->
+      <!-- MEMBER HUB SCANNER & DETAILS AUTO-ATTACH -->
       <div class="panel" style="border-color: var(--gold-accent);">
-        <div class="panel-title" style="color: var(--gold-accent);"><i class="fa-solid fa-qrcode"></i> মেম্বার হাব স্ক্যানার ও তথ্য সংযুক্তকরণ</div>
+        <div class="panel-title" style="color: var(--gold-accent);"><i class="fa-solid fa-qrcode"></i> মেম্বার হাব স্ক্যানার ও অটো-অ্যাটাচ তথ্য</div>
         <button class="btn btn-scanner" onclick="toggleHubScanner()">
           <i class="fa-solid fa-camera"></i> মেম্বার কার্ড স্ক্যান করুন (অটো-অ্যাটাচ)
         </button>
         <div id="hubReader"></div>
         <div class="input-row" style="margin-top: 10px;">
           <div class="input-group">
-            <label>মেম্বার আইডি:</label>
-            <input type="text" id="hubCardId" placeholder="আইডি লিখুন বা স্ক্যান করুন" oninput="loadHubMember()">
+            <label>মেম্বার আইডি লিখুন বা স্ক্যান করুন:</label>
+            <input type="text" id="hubCardId" placeholder="যেমন: SKR-123456" oninput="loadHubMember()" onchange="loadHubMember()">
           </div>
-          <button class="btn" style="width: 100px; flex: none;" onclick="loadHubMember()">লোড</button>
         </div>
         <div id="hubDetailsBox" style="background: #0f172a; padding: 12px; border-radius: 8px; font-size: 0.9rem; display: none; margin-top: 5px;"></div>
       </div>
 
       <div class="panel">
-        <div class="panel-title"><i class="fa-solid fa-id-card"></i> নতুন মেম্বারশিপ কার্ড তৈরি ও প্রিন্ট</div>
+        <div class="panel-title"><i class="fa-solid fa-id-card"></i> মেম্বারশিপ কার্ড জেনারেটর (অটো-ফিলযুক্ত)</div>
         
         <div class="input-row">
           <div class="input-group" style="flex: 2;">
@@ -717,18 +719,36 @@
     let hubQrCode = null;
     let lastReceiptData = null;
 
+    // Check Auto-Login Session on Page Load
+    window.onload = function() {
+      const savedAuth = localStorage.getItem('sakura_pin_auth');
+      if (savedAuth === CORRECT_PIN) {
+        unlockApp();
+      }
+    };
+
     function verifyPin() {
       const enteredPin = document.getElementById('pinInput').value.trim();
       if (enteredPin === CORRECT_PIN) {
-        document.getElementById('lockScreen').style.display = 'none';
-        document.getElementById('appWrapper').style.display = 'flex';
-        fetchDataFromSheets();
-        generateNewCardID();
+        localStorage.setItem('sakura_pin_auth', CORRECT_PIN);
+        unlockApp();
       } else {
         const errBox = document.getElementById('pinError');
         errBox.style.display = 'block';
         document.getElementById('pinInput').value = '';
       }
+    }
+
+    function unlockApp() {
+      document.getElementById('lockScreen').style.display = 'none';
+      document.getElementById('appWrapper').style.display = 'flex';
+      fetchDataFromSheets();
+      generateNewCardID();
+    }
+
+    function logout() {
+      localStorage.removeItem('sakura_pin_auth');
+      location.reload();
     }
 
     document.getElementById('pinInput').addEventListener('keypress', function(e) {
@@ -804,7 +824,8 @@
       });
     }
 
-    function autoFetchMember() {
+    // Universal Auto-Fetch & Auto-Attach Member Data
+    function autoFetchMember(section) {
       const cardID = document.getElementById('posCardID').value.trim().toUpperCase();
       if (membersDatabase[cardID]) {
         const m = membersDatabase[cardID];
@@ -828,7 +849,7 @@
           { fps: 10, qrbox: { width: 200, height: 200 } },
           (decodedText) => {
             document.getElementById('hubCardId').value = decodedText;
-            hubQrCode.stop().then(() => readerDiv.style.display = 'none');
+            if (hubQrCode) hubQrCode.stop().then(() => readerDiv.style.display = 'none');
             loadHubMember();
           },
           (err) => {}
@@ -842,20 +863,27 @@
     function loadHubMember() {
       const cardId = document.getElementById('hubCardId').value.trim().toUpperCase();
       const box = document.getElementById('hubDetailsBox');
-      if (!cardId) {
-        alert("আইডি দিন।");
-        return;
-      }
+      if (!cardId) return;
+
       box.style.display = 'block';
       if (membersDatabase[cardId]) {
         const m = membersDatabase[cardId];
         box.innerHTML = `
-          ✅ <b>মেম্বার সংযুক্ত হয়েছে!</b><br>
+          ✅ <b>মেম্বার সংযুক্ত ও তথ্য অটো-ফিল হয়েছে!</b><br>
           🆔 আইডি: <b>${cardId}</b><br>
           👤 নাম: <b>${m.name}</b><br>
           📞 হোয়াটসঅ্যাপ: <span style="color: var(--green-status); font-weight: bold;">${m.phone || 'নেই'}</span><br>
           💰 মোট কেনাকাটা: ৳${m.totalSpend.toFixed(2)} | ⭐ পয়েন্ট: ${m.totalPoints.toFixed(2)}
         `;
+
+        // Auto-attach to Card Hub Generator Form below
+        document.getElementById('cardIdInput').value = cardId;
+        document.getElementById('cardNameInput').value = m.name || '';
+        document.getElementById('cardPhoneInput').value = m.phone || '';
+        document.getElementById('cardSerialBadge').innerText = cardId;
+        updateCardVisual();
+        updateQRCode(cardId);
+
       } else {
         box.innerHTML = `⚠️ এই কার্ড আইডি (${cardId}) দিয়ে কোনো রেকর্ড পাওয়া যায়নি।`;
       }
@@ -873,9 +901,9 @@
           { fps: 10, qrbox: { width: 200, height: 200 } },
           (decodedText) => {
             document.getElementById('posCardID').value = decodedText;
-            autoFetchMember();
+            autoFetchMember('pos');
             stopScanner();
-            alert(`✅ কার্ড স্ক্যান সফল! ID: ${decodedText}`);
+            alert(`✅ কার্ড স্ক্যান সফল! আইডি: ${decodedText}`);
           },
           (err) => {}
         ).catch(err => {

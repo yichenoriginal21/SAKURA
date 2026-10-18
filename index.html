@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sakura Market - Secure POS & Membership Hub</title>
+  <title>Sakura Market - POS & Membership Hub</title>
   
   <!-- FontAwesome & Google Fonts -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -43,7 +43,7 @@
       min-height: 100vh;
     }
 
-    /* PASSWORD LOCK SCREEN OVERLAY */
+    /* PASSWORD LOCK SCREEN */
     #lockScreen {
       position: fixed;
       inset: 0;
@@ -85,13 +85,9 @@
       outline: none;
     }
 
-    .lock-box input:focus {
-      border-color: var(--pink-primary);
-    }
-
     /* MAIN APP WRAPPER */
     #appWrapper {
-      display: none; /* Initially hidden until unlocked */
+      display: none;
       width: 100%;
       max-width: 720px;
       flex-direction: column;
@@ -302,6 +298,7 @@
     .btn:hover { opacity: 0.9; }
     .btn-scanner { background: #1d4ed8; border: 1px solid #3b82f6; }
     .btn-green { background: #1b4d3e; border: 1px solid #2ecc71; }
+    .btn-whatsapp { background: #25d366; color: #000; }
 
     .btn-preset {
       background: #1e293b;
@@ -350,7 +347,33 @@
     .badge-member { background: rgba(225, 29, 72, 0.2); color: var(--pink-primary); }
     .badge-guest { background: rgba(148, 163, 184, 0.2); color: var(--text-muted); }
 
-    /* Membership Card Design Styles */
+    /* DIGITAL RECEIPT MODAL */
+    #receiptModal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 10000;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      padding: 15px;
+    }
+
+    .receipt-card {
+      background: #ffffff;
+      color: #121212;
+      width: 100%;
+      max-width: 380px;
+      padding: 24px;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      position: relative;
+    }
+
+    /* Membership Card Frame */
     .card-frame {
       width: 100%;
       max-width: 580px;
@@ -430,6 +453,46 @@
     </div>
   </div>
 
+  <!-- DIGITAL E-RECEIPT MODAL -->
+  <div id="receiptModal">
+    <div class="receipt-card" id="receiptCardContent">
+      <div style="text-align: center; border-bottom: 2px dashed #ddd; padding-bottom: 10px;">
+        <h2 style="color: #e11d48; font-size: 1.3rem;">🌸 সাকুরা মার্কেট</h2>
+        <p style="font-size: 0.75rem; color: #666;">আম্বরখানা, সিলেট • ডিজিটাল ই-রসিদ</p>
+      </div>
+      <div style="font-size: 0.85rem; display: flex; flex-direction: column; gap: 6px;">
+        <div><b>রসিদ আইডি:</b> <span id="rcptId"></span></div>
+        <div><b>তারিখ ও সময়:</b> <span id="rcptTime"></span></div>
+        <div><b>কাস্টমার:</b> <span id="rcptName"></span></div>
+        <div><b>কার্ড আইডি:</b> <span id="rcptCard"></span></div>
+        <div><b>ফোন:</b> <span id="rcptPhone"></span></div>
+        <hr style="border: 0.5px solid #eee;">
+        <div style="display: flex; justify-content: space-between; font-size: 1rem; font-weight: bold;">
+          <span>মোট পরিমাণ:</span>
+          <span style="color: #e11d48;" id="rcptAmount"></span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+          <span>অর্জিত পয়েন্ট:</span>
+          <span style="color: #16a34a;" id="rcptPoints"></span>
+        </div>
+      </div>
+      <div style="text-align: center; font-size: 0.7rem; color: #888; border-top: 1px dashed #ddd; padding-top: 8px;">
+        সাকুরা মার্কেট মেম্বারশিপ ব্যবহারের জন্য ধন্যবাদ!
+      </div>
+    </div>
+
+    <!-- Receipt Action Buttons -->
+    <div style="display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 380px; margin-top: 10px;">
+      <button class="btn btn-whatsapp" onclick="sendWhatsAppReceipt()">
+        <i class="fa-brands fa-whatsapp"></i> হোয়াটসঅ্যাপে রসিদ পাঠান
+      </button>
+      <button class="btn btn-green" onclick="downloadReceiptPNG()">
+        <i class="fa-solid fa-download"></i> রসিদ PNG ডাউনলোড করুন
+      </button>
+      <button class="btn" style="background: #334155;" onclick="closeReceiptModal()">বন্ধ করুন</button>
+    </div>
+  </div>
+
   <!-- MAIN APP WRAPPER -->
   <div id="appWrapper" class="container">
     
@@ -487,7 +550,7 @@
             <div class="input-row" style="margin-bottom: 10px;">
               <div class="input-group">
                 <label>মেম্বার কার্ড আইডি / QR নম্বর:</label>
-                <input type="text" id="posCardID" placeholder="যেমন: SKR-123456" onchange="autoFetchMember()">
+                <input type="text" id="posCardID" placeholder="যেমন: SKR-123456" oninput="autoFetchMember()" onchange="autoFetchMember()">
               </div>
             </div>
           </div>
@@ -526,7 +589,7 @@
           </div>
 
           <button type="submit" class="btn">
-            <i class="fa-solid fa-check-circle"></i> লেনদেন সেভ ও শিটে পাঠান
+            <i class="fa-solid fa-check-circle"></i> লেনদেন সেভ ও রসিদ তৈরি করুন
           </button>
         </form>
       </div>
@@ -557,7 +620,7 @@
     <!-- TAB 2: MEMBERSHIP CARD ISSUANCE & SEARCH -->
     <div id="cardTab" class="tab-content">
       
-      <!-- MEMBER SEARCH PANEL (NEW FEATURE) -->
+      <!-- MEMBER SEARCH PANEL -->
       <div class="panel" style="border-color: var(--gold-accent);">
         <div class="panel-title" style="color: var(--gold-accent);"><i class="fa-solid fa-magnifying-glass"></i> মেম্বার সার্চ ও মোট কেনাকাটা যাচাই</div>
         <div class="input-row">
@@ -566,9 +629,7 @@
           </div>
           <button class="btn" style="width: 120px; flex: none;" onclick="searchMemberSpending()">খুঁজুন</button>
         </div>
-        <div id="searchResultBox" style="background: #0f172a; padding: 12px; border-radius: 8px; font-size: 0.9rem; display: none; margin-top: 5px;">
-          <!-- Result rendered here -->
-        </div>
+        <div id="searchResultBox" style="background: #0f172a; padding: 12px; border-radius: 8px; font-size: 0.9rem; display: none; margin-top: 5px;"></div>
       </div>
 
       <div class="panel">
@@ -640,8 +701,8 @@
     let transactions = [];
     let membersDatabase = {};
     let html5QrCode = null;
+    let lastReceiptData = null;
 
-    // PIN Verification Function
     function verifyPin() {
       const enteredPin = document.getElementById('pinInput').value.trim();
       if (enteredPin === CORRECT_PIN) {
@@ -656,7 +717,6 @@
       }
     }
 
-    // Allow Enter key for password login
     document.getElementById('pinInput').addEventListener('keypress', function(e) {
       if (e.key === 'Enter') verifyPin();
     });
@@ -692,7 +752,6 @@
       document.getElementById('posAmount').value = amt;
     }
 
-    // Google Sheets Data Fetch & Summary Construction
     function fetchDataFromSheets() {
       fetch(SCRIPT_URL)
         .then(res => res.json())
@@ -722,8 +781,8 @@
               purchasesCount: 0 
             };
           }
-          membersDatabase[t.cardID].name = t.name;
-          membersDatabase[t.cardID].phone = t.phone;
+          if (t.name) membersDatabase[t.cardID].name = t.name;
+          if (t.phone) membersDatabase[t.cardID].phone = t.phone;
           membersDatabase[t.cardID].totalSpend += parseFloat(t.amount || 0);
           membersDatabase[t.cardID].totalPoints += parseFloat(t.points || 0);
           if (t.txType === 'sale') membersDatabase[t.cardID].purchasesCount += 1;
@@ -731,7 +790,16 @@
       });
     }
 
-    // Search Member Spending by ID
+    // Auto-fill member info when card ID is typed or scanned
+    function autoFetchMember() {
+      const cardID = document.getElementById('posCardID').value.trim().toUpperCase();
+      if (membersDatabase[cardID]) {
+        const m = membersDatabase[cardID];
+        document.getElementById('posName').value = m.name || '';
+        document.getElementById('posPhone').value = m.phone || '';
+      }
+    }
+
     function searchMemberSpending() {
       const searchId = document.getElementById('searchMemberId').value.trim().toUpperCase();
       const resBox = document.getElementById('searchResultBox');
@@ -758,7 +826,6 @@
       }
     }
 
-    // Camera Scanner
     function toggleCameraScanner() {
       const readerDiv = document.getElementById('reader');
       if (readerDiv.style.display === 'block') {
@@ -788,15 +855,6 @@
         html5QrCode.stop().then(() => {
           document.getElementById('reader').style.display = 'none';
         }).catch(err => console.error(err));
-      }
-    }
-
-    function autoFetchMember() {
-      const cardID = document.getElementById('posCardID').value.trim().toUpperCase();
-      if (membersDatabase[cardID]) {
-        const m = membersDatabase[cardID];
-        document.getElementById('posName').value = m.name || '';
-        document.getElementById('posPhone').value = m.phone || '';
       }
     }
 
@@ -832,6 +890,8 @@
         points: pointsEarned
       };
 
+      lastReceiptData = newTx;
+
       transactions.unshift(newTx);
       buildMembersDatabase();
       renderHistory();
@@ -842,16 +902,59 @@
         mode: 'no-cors',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newTx)
-      }).then(() => {
-        alert("✅ লেনদেন সফলভাবে গুগল শিটে সেভ হয়েছে!");
-      }).catch(err => {
-        alert("⚠️ শিটে পাঠাতে সমস্যা হয়েছে, তবে লোকাললি যোগ হয়েছে।");
-      });
+      }).catch(err => console.error("Sheet sync error:", err));
+
+      // Show Digital Receipt Modal
+      showReceiptModal(newTx);
 
       document.getElementById('posAmount').value = '';
       document.getElementById('posCardID').value = '';
       document.getElementById('posName').value = '';
       document.getElementById('posPhone').value = '';
+    }
+
+    function showReceiptModal(tx) {
+      document.getElementById('rcptId').innerText = tx.id.slice(-6);
+      document.getElementById('rcptTime').innerText = tx.timestamp;
+      document.getElementById('rcptName').innerText = tx.name;
+      document.getElementById('rcptCard').innerText = tx.cardID;
+      document.getElementById('rcptPhone').innerText = tx.phone || 'নেই';
+      document.getElementById('rcptAmount').innerText = `৳ ${tx.amount.toFixed(2)}`;
+      document.getElementById('rcptPoints').innerText = `${tx.points >= 0 ? '+' : ''}${tx.points.toFixed(2)} পয়েন্ট`;
+      
+      document.getElementById('receiptModal').style.display = 'flex';
+    }
+
+    function closeReceiptModal() {
+      document.getElementById('receiptModal').style.display = 'none';
+    }
+
+    function downloadReceiptPNG() {
+      const receiptElement = document.getElementById('receiptCardContent');
+      html2canvas(receiptElement, { scale: 2, useCORS: true }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `Sakura_Receipt_${lastReceiptData ? lastReceiptData.id : 'pos'}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+    }
+
+    function sendWhatsAppReceipt() {
+      if (!lastReceiptData) return;
+      const t = lastReceiptData;
+      const phone = t.phone ? t.phone.replace(/[^0-9]/g, '') : '';
+      
+      const msg = `🌸 *সাকুরা মার্কেট (আম্বরখানা, সিলেট)* 🌸\n` +
+                  `📦 ডিজিটাল ই-রসিদ\n\n` +
+                  `👤 নাম: ${t.name}\n` +
+                  `🆔 কার্ড: ${t.cardID}\n` +
+                  `💰 মোট পরিমাণ: ৳${t.amount.toFixed(2)}\n` +
+                  `⭐ অর্জিত পয়েন্ট: ${t.points >= 0 ? '+' : ''}${t.points.toFixed(2)}\n` +
+                  `🕒 সময়: ${t.timestamp}\n\n` +
+                  `ধন্যবাদ আমাদের সাথে থাকার জন্য!`;
+
+      const whatsappURL = phone ? `https://wa.me/88${phone}?text=${encodeURIComponent(msg)}` : `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+      window.open(whatsappURL, '_blank');
     }
 
     function renderHistory() {
@@ -880,7 +983,6 @@
       document.getElementById('netPointsDisplay').innerText = totalPoints.toFixed(2);
     }
 
-    // Card Generation Script
     function generateNewCardID() {
       const newID = "SKR-" + Math.floor(100000 + Math.random() * 900000);
       document.getElementById('cardIdInput').value = newID;
@@ -897,7 +999,7 @@
     function updateCardVisual() {
       const name = document.getElementById('cardNameInput').value || '...................';
       document.getElementById('cardVisualName').innerText = name;
-    }
+    } 
 
     function downloadCardPNG() {
       const name = document.getElementById('cardNameInput').value.trim();

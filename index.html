@@ -553,7 +553,7 @@
             <div class="input-row" style="margin-bottom: 10px;">
               <div class="input-group">
                 <label>মেম্বার কার্ড আইডি / QR নম্বর:</label>
-                <input type="text" id="posCardID" placeholder="যেমন: SKR-123456" oninput="autoFetchMember('pos')" onchange="autoFetchMember('pos')">
+                <input type="text" id="posCardID" placeholder="যেমন: SKR-954443" oninput="autoFetchMember()" onchange="autoFetchMember()">
               </div>
             </div>
           </div>
@@ -634,7 +634,7 @@
         <div class="input-row" style="margin-top: 10px;">
           <div class="input-group">
             <label>মেম্বার আইডি লিখুন বা স্ক্যান করুন:</label>
-            <input type="text" id="hubCardId" placeholder="যেমন: SKR-123456" oninput="loadHubMember()" onchange="loadHubMember()">
+            <input type="text" id="hubCardId" placeholder="যেমন: SKR-954443" oninput="loadHubMember()" onchange="loadHubMember()">
           </div>
         </div>
         <div id="hubDetailsBox" style="background: #0f172a; padding: 12px; border-radius: 8px; font-size: 0.9rem; display: none; margin-top: 5px;"></div>
@@ -719,7 +719,6 @@
     let hubQrCode = null;
     let lastReceiptData = null;
 
-    // Check Auto-Login Session on Page Load
     window.onload = function() {
       const savedAuth = localStorage.getItem('sakura_pin_auth');
       if (savedAuth === CORRECT_PIN) {
@@ -795,6 +794,7 @@
           renderHistory();
           updateMetrics();
           document.getElementById('syncStatus').innerText = "🟢 শিট সিঙ্কড";
+          autoFetchMember();
         })
         .catch(err => {
           console.warn('Sync error:', err);
@@ -805,29 +805,30 @@
     function buildMembersDatabase() {
       membersDatabase = {};
       transactions.forEach(t => {
-        if (t.cardID && t.cardID !== "GUEST") {
-          if (!membersDatabase[t.cardID]) {
-            membersDatabase[t.cardID] = { 
-              name: t.name, 
-              phone: t.phone, 
+        const rawCard = (t.cardID || t.CardID || "").toString().trim().toUpperCase();
+        if (rawCard && rawCard !== "GUEST") {
+          if (!membersDatabase[rawCard]) {
+            membersDatabase[rawCard] = { 
+              name: t.name || t.Name || "", 
+              phone: t.phone || t.Phone || "", 
               totalSpend: 0, 
               totalPoints: 0,
               purchasesCount: 0 
             };
           }
-          if (t.name) membersDatabase[t.cardID].name = t.name;
-          if (t.phone) membersDatabase[t.cardID].phone = t.phone;
-          membersDatabase[t.cardID].totalSpend += parseFloat(t.amount || 0);
-          membersDatabase[t.cardID].totalPoints += parseFloat(t.points || 0);
-          if (t.txType === 'sale') membersDatabase[t.cardID].purchasesCount += 1;
+          if (t.name || t.Name) membersDatabase[rawCard].name = t.name || t.Name;
+          if (t.phone || t.Phone) membersDatabase[rawCard].phone = t.phone || t.Phone;
+          membersDatabase[rawCard].totalSpend += parseFloat(t.amount || t.Amount || 0);
+          membersDatabase[rawCard].totalPoints += parseFloat(t.points || t.Points || 0);
+          if (t.txType === 'sale' || t.TransactionType === 'sale') membersDatabase[rawCard].purchasesCount += 1;
         }
       });
     }
 
-    // Universal Auto-Fetch & Auto-Attach Member Data
-    function autoFetchMember(section) {
+    // Direct Smart Auto-Fetch for POS Section
+    function autoFetchMember() {
       const cardID = document.getElementById('posCardID').value.trim().toUpperCase();
-      if (membersDatabase[cardID]) {
+      if (cardID && membersDatabase[cardID]) {
         const m = membersDatabase[cardID];
         document.getElementById('posName').value = m.name || '';
         document.getElementById('posPhone').value = m.phone || '';
@@ -876,7 +877,6 @@
           💰 মোট কেনাকাটা: ৳${m.totalSpend.toFixed(2)} | ⭐ পয়েন্ট: ${m.totalPoints.toFixed(2)}
         `;
 
-        // Auto-attach to Card Hub Generator Form below
         document.getElementById('cardIdInput').value = cardId;
         document.getElementById('cardNameInput').value = m.name || '';
         document.getElementById('cardPhoneInput').value = m.phone || '';
@@ -885,7 +885,7 @@
         updateQRCode(cardId);
 
       } else {
-        box.innerHTML = `⚠️ এই কার্ড আইডি (${cardId}) দিয়ে কোনো রেকর্ড পাওয়া যায়নি।`;
+        box.innerHTML = `⚠️ এই কার্ড আইডি (${cardId}) দিয়ে এখনো গুগল শিটে কোনো রেকর্ড তৈরি হয়নি। নতুন বিক্রি সাবমিট করলেই এটি অটো সেভ হবে।`;
       }
     }
 
@@ -900,10 +900,10 @@
           { facingMode: "environment" },
           { fps: 10, qrbox: { width: 200, height: 200 } },
           (decodedText) => {
-            document.getElementById('posCardID').value = decodedText;
-            autoFetchMember('pos');
+            const cleanID = decodedText.trim().toUpperCase();
+            document.getElementById('posCardID').value = cleanID;
+            autoFetchMember();
             stopScanner();
-            alert(`✅ কার্ড স্ক্যান সফল! আইডি: ${decodedText}`);
           },
           (err) => {}
         ).catch(err => {
@@ -1017,7 +1017,16 @@
     }
 
     function sendWhatsAppDirect(t) {
-      const phone = t.phone ? t.phone.replace(/[^0-9]/g, '') : '';
+      let rawPhone = t.phone ? t.phone.replace(/[^0-9]/g, '') : '';
+      
+      // Bangladeshi Country Code (+88) formatting check
+      let formattedPhone = rawPhone;
+      if (rawPhone.length === 11 && rawPhone.startsWith('01')) {
+        formattedPhone = '88' + rawPhone;
+      } else if (rawPhone.length === 13 && rawPhone.startsWith('880')) {
+        formattedPhone = rawPhone;
+      }
+
       const msg = `🌸 *সাকুরা মার্কেট (আম্বরখানা, সিলেট)* 🌸\n` +
                   `📦 ডিজিটাল ই-রসিদ\n\n` +
                   `👤 নাম: ${t.name}\n` +
@@ -1027,7 +1036,7 @@
                   `🕒 সময়: ${t.timestamp}\n\n` +
                   `ধন্যবাদ আমাদের সাথে থাকার জন্য!`;
 
-      const whatsappURL = phone ? `https://wa.me/88${phone}?text=${encodeURIComponent(msg)}` : `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+      const whatsappURL = formattedPhone ? `https://wa.me/${formattedPhone}?text=${encodeURIComponent(msg)}` : `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
       window.open(whatsappURL, '_blank');
     }
 

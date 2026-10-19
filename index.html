@@ -802,7 +802,7 @@
       document.getElementById('lockScreen').style.display = 'none';
       document.getElementById('appWrapper').style.display = 'flex';
       
-      // Load local offline data first
+      // Load local offline data first to populate member database instantly
       const localData = await getLocalTransactions();
       if (localData && localData.length > 0) {
         transactions = localData;
@@ -864,7 +864,6 @@
         .then(async data => {
           const remoteTxs = data || [];
           
-          // Merge remote and local transactions smoothly
           const mergedMap = new Map();
           remoteTxs.forEach(t => {
             t.synced = true;
@@ -880,7 +879,6 @@
 
           transactions = Array.from(mergedMap.values()).sort((a, b) => Number(b.id) - Number(a.id));
           
-          // Save merged dataset back to local DB
           transactions.forEach(t => saveTransactionLocally(t));
 
           buildMembersDatabase();
@@ -889,7 +887,6 @@
           updateConnectionStatusUI();
           autoFetchMember();
 
-          // Trigger sync for any unsynced offline entries
           syncOfflineDataToSheets();
         })
         .catch(err => {
@@ -898,7 +895,6 @@
         });
     }
 
-    // Auto-sync Unsynced Local Receipts to Google Sheets when Online
     async function syncOfflineDataToSheets() {
       updateConnectionStatusUI();
       if (!navigator.onLine) return;
@@ -928,34 +924,42 @@
 
     function buildMembersDatabase() {
       membersDatabase = {};
-      transactions.forEach(t => {
+      // Sort oldest to newest so latest name/phone update overwrites older ones correctly
+      const sortedAsc = [...transactions].sort((a, b) => Number(a.id) - Number(b.id));
+      sortedAsc.forEach(t => {
         const rawCard = (t.cardID || t.CardID || "").toString().trim().toUpperCase();
         if (rawCard && rawCard !== "GUEST") {
           if (!membersDatabase[rawCard]) {
             membersDatabase[rawCard] = { 
-              name: t.name || t.Name || "", 
-              phone: t.phone || t.Phone || "", 
+              name: "", 
+              phone: "", 
               totalSpend: 0, 
               totalPoints: 0,
               purchasesCount: 0 
             };
           }
-          if (t.name || t.Name) membersDatabase[rawCard].name = t.name || t.Name;
-          if (t.phone || t.Phone) membersDatabase[rawCard].phone = t.phone || t.Phone;
+          const currentName = t.name || t.Name || "";
+          const currentPhone = t.phone || t.Phone || "";
+          
+          if (currentName) membersDatabase[rawCard].name = currentName;
+          if (currentPhone) membersDatabase[rawCard].phone = currentPhone;
+
           membersDatabase[rawCard].totalSpend += parseFloat(t.amount || t.Amount || 0);
           membersDatabase[rawCard].totalPoints += parseFloat(t.points || t.Points || 0);
-          if (t.txType === 'sale' || t.TransactionType === 'sale') membersDatabase[rawCard].purchasesCount += 1;
+          if (t.txType === 'sale' || t.TransactionType === 'sale') {
+            membersDatabase[rawCard].purchasesCount += 1;
+          }
         }
       });
     }
 
-    // Direct Smart Auto-Fetch for POS Section
+    // Direct Smart Auto-Fetch for POS Section (Offline & Online)
     function autoFetchMember() {
       const cardID = document.getElementById('posCardID').value.trim().toUpperCase();
       if (cardID && membersDatabase[cardID]) {
         const m = membersDatabase[cardID];
-        document.getElementById('posName').value = m.name || '';
-        document.getElementById('posPhone').value = m.phone || '';
+        if (m.name) document.getElementById('posName').value = m.name;
+        if (m.phone) document.getElementById('posPhone').value = m.phone;
       }
     }
 
@@ -973,7 +977,8 @@
           { facingMode: "environment" },
           { fps: 10, qrbox: { width: 200, height: 200 } },
           (decodedText) => {
-            document.getElementById('hubCardId').value = decodedText;
+            const cleanID = decodedText.trim().toUpperCase();
+            document.getElementById('hubCardId').value = cleanID;
             if (hubQrCode) hubQrCode.stop().then(() => readerDiv.style.display = 'none');
             loadHubMember();
           },
@@ -996,7 +1001,7 @@
         box.innerHTML = `
           ✅ <b>মেম্বার সংযুক্ত ও তথ্য অটো-ফিল হয়েছে!</b><br>
           🆔 আইডি: <b>${cardId}</b><br>
-          👤 নাম: <b>${m.name}</b><br>
+          👤 নাম: <b>${m.name || 'নাম পাওয়া যায়নি'}</b><br>
           📞 হোয়াটসঅ্যাপ: <span style="color: var(--green-status); font-weight: bold;">${m.phone || 'নেই'}</span><br>
           💰 মোট কেনাকাটা: ৳${m.totalSpend.toFixed(2)} | ⭐ পয়েন্ট: ${m.totalPoints.toFixed(2)}
         `;
@@ -1009,7 +1014,7 @@
         updateQRCode(cardId);
 
       } else {
-        box.innerHTML = `⚠️ এই কার্ড আইডি (${cardId}) দিয়ে এখনো স্থানীয় রেকর্ড বা গুগল শিটে কোনো ডাটা নেই। বিক্রি সাবমিট করলে এটি অটো সেভ হবে।`;
+        box.innerHTML = `⚠️ এই কার্ড আইডি (${cardId}) দিয়ে এখনো স্থানীয় রেকর্ড বা গুগল শিটে কোনো ডাটা নেই। নতুন বিক্রি বা এন্ট্রি সাবমিট করলেই এটি অটো সেভ হবে।`;
       }
     }
 
@@ -1026,7 +1031,7 @@
           (decodedText) => {
             const cleanID = decodedText.trim().toUpperCase();
             document.getElementById('posCardID').value = cleanID;
-            autoFetchMember();
+            autoFetchMember(); // Autofills name and phone instantly from local database
             stopScanner();
           },
           (err) => {}
@@ -1082,7 +1087,7 @@
 
       lastReceiptData = newTx;
 
-      // 1. Save to Local IndexedDB Storage
+      // 1. Save locally right away (IndexedDB)
       saveTransactionLocally(newTx);
 
       transactions.unshift(newTx);
@@ -1090,7 +1095,7 @@
       renderHistory();
       updateMetrics();
 
-      // 2. If Online, Sync to Google Sheets
+      // 2. Sync if Online
       if (isOnline) {
         fetch(SCRIPT_URL, {
           method: 'POST',
@@ -1103,11 +1108,10 @@
         }).catch(err => console.error("Sheet sync error:", err));
       }
 
-      // 3. Display Modal & Auto Download Receipt in Offline mode
+      // 3. Show Modal & Auto Download Receipt in Offline mode
       showReceiptModal(newTx);
 
       if (!isOnline) {
-        // Auto download receipt sequentially in offline mode
         setTimeout(() => {
           downloadReceiptPNG();
         }, 300);

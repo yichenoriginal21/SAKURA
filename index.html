@@ -24,6 +24,7 @@
       --text-light: #f8fafc;
       --text-muted: #94a3b8;
       --green-status: #4ade80;
+      --orange-offline: #fb923c;
     }
 
     * {
@@ -664,14 +665,9 @@
           </div>
         </div>
 
-        <div style="display: flex; gap: 10px; margin-top: 5px;">
-          <button class="btn btn-green" style="flex: 1;" onclick="downloadCardPNG()">
-            <i class="fa-solid fa-download"></i> কার্ড ডাউনলোড
-          </button>
-          <button class="btn btn-whatsapp" style="flex: 1;" onclick="sendMembershipCardViaWhatsApp()">
-            <i class="fa-brands fa-whatsapp"></i> কার্ড হোয়াটসঅ্যাপে পাঠান
-          </button>
-        </div>
+        <button class="btn btn-green" onclick="downloadCardPNG()">
+          <i class="fa-solid fa-download"></i> মেম্বারশিপ কার্ড PNG ডাউনলোড করুন (ফি: ৳১৫)
+        </button>
       </div>
 
       <!-- Printable Visual Card Preview -->
@@ -721,8 +717,69 @@
     let html5QrCode = null;
     let hubQrCode = null;
     let lastReceiptData = null;
+    let db = null;
 
-    window.onload = function() {
+    // Initialize IndexedDB for Offline Local Storage
+    function initDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open("SakuraMarketDB", 1);
+        request.onupgradeneeded = function(e) {
+          db = e.target.result;
+          if (!db.objectStoreNames.contains("transactions")) {
+            db.createObjectStore("transactions", { keyPath: "id" });
+          }
+        };
+        request.onsuccess = function(e) {
+          db = e.target.result;
+          resolve(db);
+        };
+        request.onerror = function(e) {
+          console.error("IndexedDB Open Error:", e);
+          reject(e);
+        };
+      });
+    }
+
+    // Save transaction to local storage (IndexedDB)
+    function saveTransactionLocally(tx) {
+      if (!db) return;
+      const txStore = db.transaction("transactions", "readwrite").objectStore("transactions");
+      txStore.put(tx);
+    }
+
+    // Get all transactions from IndexedDB
+    function getLocalTransactions() {
+      return new Promise((resolve) => {
+        if (!db) return resolve([]);
+        const txStore = db.transaction("transactions", "readonly").objectStore("transactions");
+        const request = txStore.getAll();
+        request.onsuccess = function() {
+          resolve(request.result || []);
+        };
+        request.onerror = function() {
+          resolve([]);
+        };
+      });
+    }
+
+    // Network Status Listeners & Auto-Sync
+    window.addEventListener('online', syncOfflineDataToSheets);
+    window.addEventListener('offline', updateConnectionStatusUI);
+
+    function updateConnectionStatusUI() {
+      const statusEl = document.getElementById('syncStatus');
+      if (navigator.onLine) {
+        statusEl.innerText = "🟢 শিট সিঙ্কড";
+        statusEl.style.color = "var(--green-status)";
+      } else {
+        statusEl.innerText = "🟠 অফলাইন মোড (লোকাল সেভ)";
+        statusEl.style.color = "var(--orange-offline)";
+      }
+    }
+
+    window.onload = async function() {
+      await initDB();
+      updateConnectionStatusUI();
       const savedAuth = localStorage.getItem('sakura_pin_auth');
       if (savedAuth === CORRECT_PIN) {
         unlockApp();
@@ -741,10 +798,23 @@
       }
     }
 
-    function unlockApp() {
+    async function unlockApp() {
       document.getElementById('lockScreen').style.display = 'none';
       document.getElementById('appWrapper').style.display = 'flex';
-      fetchDataFromSheets();
+      
+      // Load local offline data first
+      const localData = await getLocalTransactions();
+      if (localData && localData.length > 0) {
+        transactions = localData;
+        buildMembersDatabase();
+        renderHistory();
+        updateMetrics();
+      }
+
+      // Fetch online data & sync if online
+      if (navigator.onLine) {
+        fetchDataFromSheets();
+      }
       generateNewCardID();
     }
 
@@ -791,18 +861,69 @@
     function fetchDataFromSheets() {
       fetch(SCRIPT_URL)
         .then(res => res.json())
-        .then(data => {
-          transactions = data || [];
+        .then(async data => {
+          const remoteTxs = data || [];
+          
+          // Merge remote and local transactions smoothly
+          const mergedMap = new Map();
+          remoteTxs.forEach(t => {
+            t.synced = true;
+            mergedMap.set(String(t.id), t);
+          });
+          
+          const localTxs = await getLocalTransactions();
+          localTxs.forEach(t => {
+            if (!mergedMap.has(String(t.id))) {
+              mergedMap.set(String(t.id), t);
+            }
+          });
+
+          transactions = Array.from(mergedMap.values()).sort((a, b) => Number(b.id) - Number(a.id));
+          
+          // Save merged dataset back to local DB
+          transactions.forEach(t => saveTransactionLocally(t));
+
           buildMembersDatabase();
           renderHistory();
           updateMetrics();
-          document.getElementById('syncStatus').innerText = "🟢 শিট সিঙ্কড";
+          updateConnectionStatusUI();
           autoFetchMember();
+
+          // Trigger sync for any unsynced offline entries
+          syncOfflineDataToSheets();
         })
         .catch(err => {
-          console.warn('Sync error:', err);
-          document.getElementById('syncStatus').innerText = "🔴 অফলাইন মোড";
+          console.warn('Sync fetch error:', err);
+          updateConnectionStatusUI();
         });
+    }
+
+    // Auto-sync Unsynced Local Receipts to Google Sheets when Online
+    async function syncOfflineDataToSheets() {
+      updateConnectionStatusUI();
+      if (!navigator.onLine) return;
+
+      const localData = await getLocalTransactions();
+      const unsynced = localData.filter(t => !t.synced);
+
+      if (unsynced.length === 0) return;
+
+      for (const item of unsynced) {
+        try {
+          await fetch(SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(item)
+          });
+          item.synced = true;
+          saveTransactionLocally(item);
+        } catch (err) {
+          console.error("Failed to sync transaction:", item.id, err);
+        }
+      }
+
+      updateConnectionStatusUI();
     }
 
     function buildMembersDatabase() {
@@ -888,7 +1009,7 @@
         updateQRCode(cardId);
 
       } else {
-        box.innerHTML = `⚠️ এই কার্ড আইডি (${cardId}) দিয়ে এখনো গুগল শিটে কোনো রেকর্ড তৈরি হয়নি। নতুন বিক্রি সাবমিট করলেই এটি অটো সেভ হবে।`;
+        box.innerHTML = `⚠️ এই কার্ড আইডি (${cardId}) দিয়ে এখনো স্থানীয় রেকর্ড বা গুগল শিটে কোনো ডাটা নেই। বিক্রি সাবমিট করলে এটি অটো সেভ হবে।`;
       }
     }
 
@@ -924,7 +1045,7 @@
       }
     }
 
-    function processSale(e) {
+    async function processSale(e) {
       e.preventDefault();
       const name = document.getElementById('posName').value.trim();
       const phone = document.getElementById('posPhone').value.trim();
@@ -944,6 +1065,8 @@
         }
       }
 
+      const isOnline = navigator.onLine;
+
       const newTx = {
         id: String(Date.now()),
         timestamp: new Date().toLocaleString('bn-BD'),
@@ -953,24 +1076,42 @@
         phone: phone,
         txType: txType,
         amount: txType === 'redeem' ? 0 : amount,
-        points: pointsEarned
+        points: pointsEarned,
+        synced: false
       };
 
       lastReceiptData = newTx;
+
+      // 1. Save to Local IndexedDB Storage
+      saveTransactionLocally(newTx);
 
       transactions.unshift(newTx);
       buildMembersDatabase();
       renderHistory();
       updateMetrics();
 
-      fetch(SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newTx)
-      }).catch(err => console.error("Sheet sync error:", err));
+      // 2. If Online, Sync to Google Sheets
+      if (isOnline) {
+        fetch(SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newTx)
+        }).then(() => {
+          newTx.synced = true;
+          saveTransactionLocally(newTx);
+        }).catch(err => console.error("Sheet sync error:", err));
+      }
 
+      // 3. Display Modal & Auto Download Receipt in Offline mode
       showReceiptModal(newTx);
+
+      if (!isOnline) {
+        // Auto download receipt sequentially in offline mode
+        setTimeout(() => {
+          downloadReceiptPNG();
+        }, 300);
+      }
 
       document.getElementById('posAmount').value = '';
       document.getElementById('posCardID').value = '';
@@ -981,6 +1122,12 @@
     function deleteReceipt(id) {
       if (confirm("আপনি কি এই রসিদ বা লেনদেনটি মুছতে চান?")) {
         transactions = transactions.filter(t => t.id !== id);
+        
+        if (db) {
+          const txStore = db.transaction("transactions", "readwrite").objectStore("transactions");
+          txStore.delete(id);
+        }
+
         buildMembersDatabase();
         renderHistory();
         updateMetrics();
@@ -1053,7 +1200,10 @@
         <tr>
           <td>${t.timestamp}</td>
           <td><b>${t.name}</b><br><small style="color: var(--text-muted);">${t.cardID}</small></td>
-          <td><span class="badge ${t.type === 'member' ? 'badge-member' : 'badge-guest'}">${t.type === 'member' ? 'মেম্বার' : 'গেস্ট'}</span></td>
+          <td>
+            <span class="badge ${t.type === 'member' ? 'badge-member' : 'badge-guest'}">${t.type === 'member' ? 'মেম্বার' : 'গেস্ট'}</span>
+            ${!t.synced ? '<span style="color:var(--orange-offline); font-size: 0.7rem;" title="অফলাইনে গচ্ছিত">(অফলাইন)</span>' : ''}
+          </td>
           <td>৳ ${parseFloat(t.amount || 0).toFixed(2)}</td>
           <td style="color: ${parseFloat(t.points || 0) >= 0 ? 'var(--green-status)' : 'red'};">${parseFloat(t.points || 0) >= 0 ? '+' : ''}${parseFloat(t.points || 0).toFixed(2)}</td>
           <td>
@@ -1104,48 +1254,7 @@
         link.href = canvas.toDataURL('image/png');
         link.click();
       });
-    }
-
-    // EXTRA FEATURE: Send Soft Copy Membership Card via WhatsApp
-    function sendMembershipCardViaWhatsApp() {
-      const name = document.getElementById('cardNameInput').value.trim();
-      const cardId = document.getElementById('cardIdInput').value.trim();
-      let phone = document.getElementById('cardPhoneInput').value.trim();
-
-      if (!name) {
-        alert("⚠️ সদস্যের নাম লিখুন।");
-        document.getElementById('cardNameInput').focus();
-        return;
-      }
-
-      let formattedPhone = phone.replace(/[^0-9]/g, '');
-      if (formattedPhone.length === 11 && formattedPhone.startsWith('01')) {
-        formattedPhone = '88' + formattedPhone;
-      } else if (formattedPhone.length === 13 && formattedPhone.startsWith('880')) {
-        formattedPhone = formattedPhone;
-      }
-
-      const cardElement = document.getElementById('membershipCard');
-      html2canvas(cardElement, { scale: 2, useCORS: true }).then(canvas => {
-        const dataUrl = canvas.toDataURL('image/png');
-        
-        // Trigger automatic download of soft copy to phone/PC so user can attach it on WhatsApp
-        const link = document.createElement('a');
-        link.download = `Sakura_Card_${cardId}.png`;
-        link.href = dataUrl;
-        link.click();
-
-        // Open WhatsApp chat with instructions
-        const msg = `🌸 *সাকুরা মার্কেট (আম্বরখানা, সিলেট)* 🌸\n` +
-                    `💳 আপনার ডিজিটাল মেম্বারশিপ কার্ড সফট কপি!\n\n` +
-                    `👤 নাম: ${name}\n` +
-                    `🆔 কার্ড আইডি: ${cardId}\n\n` +
-                    `*(আপনার ডিভাইসে কার্ডের PNG ইমেজটি ডাউনলোড হয়েছে। প্রয়োজনে চ্যাটে এটি অ্যাটাচ করে পাঠিয়ে দিন। দোকানের যেকোনো কেনাকাটায় এটি স্ক্যান করতে পারবেন!)*`;
-
-        const waUrl = formattedPhone ? `https://wa.me/${formattedPhone}?text=${encodeURIComponent(msg)}` : `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
-        window.open(waUrl, '_blank');
-      });
-    }
+    } 
   </script>
 </body>
 </html>

@@ -802,7 +802,6 @@
       document.getElementById('lockScreen').style.display = 'none';
       document.getElementById('appWrapper').style.display = 'flex';
       
-      // Load local offline data first to populate member database instantly
       const localData = await getLocalTransactions();
       if (localData && localData.length > 0) {
         transactions = localData;
@@ -811,7 +810,6 @@
         updateMetrics();
       }
 
-      // Fetch online data & sync if online
       if (navigator.onLine) {
         fetchDataFromSheets();
       }
@@ -924,7 +922,6 @@
 
     function buildMembersDatabase() {
       membersDatabase = {};
-      // Sort oldest to newest so latest name/phone update overwrites older ones correctly
       const sortedAsc = [...transactions].sort((a, b) => Number(a.id) - Number(b.id));
       sortedAsc.forEach(t => {
         const rawCard = (t.cardID || t.CardID || "").toString().trim().toUpperCase();
@@ -953,7 +950,7 @@
       });
     }
 
-    // Direct Smart Auto-Fetch for POS Section (Offline & Online)
+    // Autofill Name and Mobile from Card ID (POS Section)
     function autoFetchMember() {
       const cardID = document.getElementById('posCardID').value.trim().toUpperCase();
       if (cardID && membersDatabase[cardID]) {
@@ -963,7 +960,7 @@
       }
     }
 
-    // Hub Scanner & Info Attach
+    // Toggle Hub QR Scanner & Autofill
     function toggleHubScanner() {
       const readerDiv = document.getElementById('hubReader');
       if (readerDiv.style.display === 'block') {
@@ -980,7 +977,7 @@
             const cleanID = decodedText.trim().toUpperCase();
             document.getElementById('hubCardId').value = cleanID;
             if (hubQrCode) hubQrCode.stop().then(() => readerDiv.style.display = 'none');
-            loadHubMember();
+            loadHubMember(); // Automatically lookup and fill Hub info
           },
           (err) => {}
         ).catch(err => {
@@ -1018,6 +1015,7 @@
       }
     }
 
+    // Toggle POS QR Scanner & Autofill
     function toggleCameraScanner() {
       const readerDiv = document.getElementById('reader');
       if (readerDiv.style.display === 'block') {
@@ -1031,7 +1029,10 @@
           (decodedText) => {
             const cleanID = decodedText.trim().toUpperCase();
             document.getElementById('posCardID').value = cleanID;
-            autoFetchMember(); // Autofills name and phone instantly from local database
+            
+            // AUTOMATICALLY TRIGGER AUTO-FETCH FOR NAME & PHONE
+            autoFetchMember(); 
+
             stopScanner();
           },
           (err) => {}
@@ -1087,7 +1088,6 @@
 
       lastReceiptData = newTx;
 
-      // 1. Save locally right away (IndexedDB)
       saveTransactionLocally(newTx);
 
       transactions.unshift(newTx);
@@ -1095,7 +1095,6 @@
       renderHistory();
       updateMetrics();
 
-      // 2. Sync if Online
       if (isOnline) {
         fetch(SCRIPT_URL, {
           method: 'POST',
@@ -1108,7 +1107,6 @@
         }).catch(err => console.error("Sheet sync error:", err));
       }
 
-      // 3. Show Modal & Auto Download Receipt in Offline mode
       showReceiptModal(newTx);
 
       if (!isOnline) {

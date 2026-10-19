@@ -664,9 +664,14 @@
           </div>
         </div>
 
-        <button class="btn btn-green" onclick="downloadCardPNG()">
-          <i class="fa-solid fa-download"></i> মেম্বারশিপ কার্ড PNG ডাউনলোড করুন (ফি: ৳১৫)
-        </button>
+        <div style="display: flex; gap: 10px; margin-top: 5px;">
+          <button class="btn btn-green" style="flex: 1;" onclick="downloadCardPNG()">
+            <i class="fa-solid fa-download"></i> কার্ড ডাউনলোড
+          </button>
+          <button class="btn btn-whatsapp" style="flex: 1;" onclick="sendMembershipCardViaWhatsApp()">
+            <i class="fa-brands fa-whatsapp"></i> কার্ড হোয়াটসঅ্যাপে পাঠান
+          </button>
+        </div>
       </div>
 
       <!-- Printable Visual Card Preview -->
@@ -1017,7 +1022,6 @@
     function sendWhatsAppDirect(t) {
       let rawPhone = t.phone ? t.phone.replace(/[^0-9]/g, '') : '';
       
-      // Bangladeshi Country Code (+88) formatting check
       let formattedPhone = rawPhone;
       if (rawPhone.length === 11 && rawPhone.startsWith('01')) {
         formattedPhone = '88' + rawPhone;
@@ -1100,7 +1104,48 @@
         link.href = canvas.toDataURL('image/png');
         link.click();
       });
-    } 
+    }
+
+    // EXTRA FEATURE: Send Soft Copy Membership Card via WhatsApp
+    function sendMembershipCardViaWhatsApp() {
+      const name = document.getElementById('cardNameInput').value.trim();
+      const cardId = document.getElementById('cardIdInput').value.trim();
+      let phone = document.getElementById('cardPhoneInput').value.trim();
+
+      if (!name) {
+        alert("⚠️ সদস্যের নাম লিখুন।");
+        document.getElementById('cardNameInput').focus();
+        return;
+      }
+
+      let formattedPhone = phone.replace(/[^0-9]/g, '');
+      if (formattedPhone.length === 11 && formattedPhone.startsWith('01')) {
+        formattedPhone = '88' + formattedPhone;
+      } else if (formattedPhone.length === 13 && formattedPhone.startsWith('880')) {
+        formattedPhone = formattedPhone;
+      }
+
+      const cardElement = document.getElementById('membershipCard');
+      html2canvas(cardElement, { scale: 2, useCORS: true }).then(canvas => {
+        const dataUrl = canvas.toDataURL('image/png');
+        
+        // Trigger automatic download of soft copy to phone/PC so user can attach it on WhatsApp
+        const link = document.createElement('a');
+        link.download = `Sakura_Card_${cardId}.png`;
+        link.href = dataUrl;
+        link.click();
+
+        // Open WhatsApp chat with instructions
+        const msg = `🌸 *সাকুরা মার্কেট (আম্বরখানা, সিলেট)* 🌸\n` +
+                    `💳 আপনার ডিজিটাল মেম্বারশিপ কার্ড সফট কপি!\n\n` +
+                    `👤 নাম: ${name}\n` +
+                    `🆔 কার্ড আইডি: ${cardId}\n\n` +
+                    `*(আপনার ডিভাইসে কার্ডের PNG ইমেজটি ডাউনলোড হয়েছে। প্রয়োজনে চ্যাটে এটি অ্যাটাচ করে পাঠিয়ে দিন। দোকানের যেকোনো কেনাকাটায় এটি স্ক্যান করতে পারবেন!)*`;
+
+        const waUrl = formattedPhone ? `https://wa.me/${formattedPhone}?text=${encodeURIComponent(msg)}` : `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+        window.open(waUrl, '_blank');
+      });
+    }
   </script>
 </body>
 </html>

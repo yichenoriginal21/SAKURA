@@ -746,7 +746,9 @@
   </div>
 
   <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwZOFhqUIQicG-Od68wviQF6Cgx0rJg_62hUl5pbqUT001AfN9XeOOKP2IFTuXBQRbL/exec";
+    // BOTH GOOGLE SCRIPT URLS CONFIGURED
+    const TRANSACTIONS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwZOFhqUIQicG-Od68wviQF6Cgx0rJg_62hUl5pbqUT001AfN9XeOOKP2IFTuXBQRbL/exec";
+    const MEMBERS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw-I0nyVAv01vp6joNPzn0k8GY84ftoDk711gzBKkEOWKNdOoFRvr1Us40zZXVTzYnncQ/exec";
     const CORRECT_PIN = "28282805";
 
     let transactions = [];
@@ -777,7 +779,7 @@
     function unlockApp() {
       document.getElementById('lockScreen').style.display = 'none';
       document.getElementById('appWrapper').style.display = 'flex';
-      fetchDataFromSheets();
+      fetchAllData();
       generateNewCardID();
     }
 
@@ -824,57 +826,40 @@
       document.getElementById('posAmount').value = amt;
     }
 
-    function fetchDataFromSheets() {
-      fetch(SCRIPT_URL)
+    // Fetch from BOTH Google Sheets
+    function fetchAllData() {
+      // 1. Fetch Members Database
+      fetch(MEMBERS_SCRIPT_URL)
+        .then(res => res.json())
+        .then(data => {
+          membersDatabase = {};
+          (data || []).forEach(m => {
+            const cardId = (m.cardID || m.CardID || "").toString().trim().toUpperCase();
+            if (cardId) {
+              membersDatabase[cardId] = {
+                name: m.name || m.Name || "",
+                phone: m.phone || m.Phone || "",
+                visits: parseInt(m.visits || m.Visits || 1),
+                points: parseFloat(m.points || m.Points || 2.00)
+              };
+            }
+          });
+          document.getElementById('syncStatus').innerText = "🟢 মেম্বার ও ট্রানজাকশন শিট সিঙ্কড";
+        })
+        .catch(err => console.warn('Members sheet error:', err));
+
+      // 2. Fetch Transactions Sheet
+      fetch(TRANSACTIONS_SCRIPT_URL)
         .then(res => res.json())
         .then(data => {
           transactions = data || [];
-          buildMembersDatabase();
           renderHistory();
           updateMetrics();
-          document.getElementById('syncStatus').innerText = "🟢 শিট সিঙ্কড";
-          autoFetchMember();
         })
-        .catch(err => {
-          console.warn('Sync error:', err);
-          document.getElementById('syncStatus').innerText = "🔴 অফলাইন মোড";
-        });
+        .catch(err => console.warn('Transactions sheet error:', err));
     }
 
-    function buildMembersDatabase() {
-      membersDatabase = {};
-      transactions.forEach(t => {
-        const rawCard = (t.cardID || t.CardID || "").toString().trim().toUpperCase();
-        if (rawCard && rawCard !== "GUEST") {
-          if (!membersDatabase[rawCard]) {
-            membersDatabase[rawCard] = { 
-              name: t.name || t.Name || "", 
-              phone: t.phone || t.Phone || "", 
-              totalSpend: 0, 
-              totalPoints: 0,
-              stamps: 0,
-              visits: 0
-            };
-          }
-          if (t.name || t.Name) membersDatabase[rawCard].name = t.name || t.Name;
-          if (t.phone || t.Phone) membersDatabase[rawCard].phone = t.phone || t.Phone;
-          
-          const amt = parseFloat(t.amount || t.Amount || 0);
-          membersDatabase[rawCard].totalSpend += amt;
-          membersDatabase[rawCard].totalPoints += parseFloat(t.points || t.Points || 0);
-          
-          if (amt >= 100 && (t.txType === 'sale' || t.TransactionType === 'sale')) {
-            membersDatabase[rawCard].stamps += 1;
-            membersDatabase[rawCard].visits += 1;
-          }
-          if (t.bonusStamps) {
-            membersDatabase[rawCard].stamps += parseInt(t.bonusStamps);
-          }
-        }
-      });
-    }
-
-    // Direct Smart Auto-Fetch for POS Section (Attaches Name & WhatsApp automatically)
+    // Direct Smart Auto-Fetch for POS Section
     function autoFetchMember() {
       const cardID = document.getElementById('posCardID').value.trim().toUpperCase();
       if (cardID && membersDatabase[cardID]) {
@@ -884,7 +869,7 @@
       }
     }
 
-    // Issue New Member Card with Welcome Gift (1 Stamp + 2 Points)
+    // Issue New Member Card (Saves to Members Sheet)
     function issueNewMemberCard() {
       const name = document.getElementById('cardNameInput').value.trim();
       const cardId = document.getElementById('cardIdInput').value.trim().toUpperCase();
@@ -896,32 +881,27 @@
         return;
       }
 
-      const welcomeTx = {
-        id: String(Date.now()),
-        timestamp: new Date().toLocaleString('bn-BD'),
-        type: 'member',
+      const newMemberObj = {
         cardID: cardId,
         name: name,
         phone: phone,
-        txType: 'sale',
-        amount: 15, // 15 BDT card fee
-        points: 2,  // Welcome points
-        bonusStamps: 1 // Welcome stamp
+        regDate: new Date().toLocaleDateString('bn-BD'),
+        visits: 1,
+        points: 2.00,
+        status: "Active Member"
       };
 
-      transactions.unshift(welcomeTx);
-      buildMembersDatabase();
-      renderHistory();
-      updateMetrics();
+      membersDatabase[cardId] = newMemberObj;
 
-      fetch(SCRIPT_URL, {
+      // Send to Dedicated Members Sheet
+      fetch(MEMBERS_SCRIPT_URL, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(welcomeTx)
-      }).catch(err => console.error("Sheet sync error:", err));
+        body: JSON.stringify(newMemberObj)
+      }).catch(err => console.error("Member sheet save error:", err));
 
-      alert(`🎉 সাকুরা মার্কেট মেম্বারশিপ সফলভাবে তৈরি হয়েছে!\n\n🎁 ওয়েলকাম উপহার: ১টি ফ্রি স্ট্যাম্প ও ২ পয়েন্ট যুক্ত করা হয়েছে।`);
+      alert(`🎉 নতুন মেম্বার সফলভাবে মেম্বারশিপ ডেটাবেস শিটে সেভ হয়েছে!\n\n🎁 ওয়েলকাম উপহার: ১ স্ট্যাম্প ও ২ পয়েন্ট যুক্ত হয়েছে।`);
       loadHubMemberDirect(cardId);
     }
 
@@ -965,19 +945,19 @@
       box.style.display = 'block';
       if (membersDatabase[cardId]) {
         const m = membersDatabase[cardId];
-        let visits = m.visits || m.stamps || 0;
+        let visits = m.visits || 1;
         let tierName = "ব্রোঞ্জ স্ট্যাটাস (৫ ভিজিট)";
         if (visits >= 20) tierName = "🏆 ফুল মেম্বার বেনিফিট আনলকড (২০+ ভিজিট)";
         else if (visits >= 10) tierName = "🥈 সিলভার রিওয়ার্ড (১০+ ভিজিট)";
         else if (visits >= 5) tierName = "🥉 ব্রোঞ্জ স্ট্যাটাস (৫+ ভিজিট)";
 
         box.innerHTML = `
-          ✅ <b>মেম্বার সংযুক্ত ও তথ্য অটো-অ্যাটাচ হয়েছে!</b><br>
+          ✅ <b>মেম্বার ডেটাবেস শিট থেকে সংযুক্ত হয়েছে!</b><br>
           🆔 আইডি: <b>${cardId}</b> | নাম: <b>${m.name}</b><br>
           📞 হোয়াটসঅ্যাপ: <span style="color: var(--green-status); font-weight: bold;">${m.phone || 'নেই'}</span><br>
-          ⭐ মোট পয়েন্ট: <b>${m.totalPoints.toFixed(2)}</b><br>
-          🎯 মোট ভিজিট ও স্ট্যাম্প: <b>${visits} টি</b><br>
-          🎖️ বর্তমান স্ট্যাটাস: <b style="color: var(--gold-accent);">${tierName}</b>
+          ⭐ মোট পয়েন্ট: <b>${parseFloat(m.points).toFixed(2)}</b><br>
+          🎯 মোট ভিজিট: <b>${visits} টি</b><br>
+          🎖️ স্ট্যাটাস: <b style="color: var(--gold-accent);">${tierName}</b>
         `;
 
         document.getElementById('cardIdInput').value = cardId;
@@ -990,7 +970,7 @@
         updateVisualStamps(visits);
 
       } else {
-        box.innerHTML = `⚠️ এই কার্ড আইডি (${cardId}) দিয়ে এখনো কোনো রেকর্ড নেই। নিচে 'নতুন মেম্বার নিবন্ধন করুন' বাটন দিয়ে কার্ড ইস্যু করুন।`;
+        box.innerHTML = `⚠️ এই কার্ড আইডি (${cardId}) মেম্বার ডেটাবেস শিটে নেই। নিচে থেকে নতুন মেম্বার হিসেবে রেজিস্টার করুন।`;
       }
     }
 
@@ -1004,7 +984,7 @@
       }
     }
 
-    // POS QR Scanner with Automatic Name & Phone Auto-Attachment
+    // POS QR Scanner with Auto-Attachment from Members Sheet
     function toggleCameraScanner() {
       const readerDiv = document.getElementById('reader');
       if (readerDiv.style.display === 'block') {
@@ -1019,21 +999,20 @@
             const cleanID = decodedText.trim().toUpperCase();
             document.getElementById('posCardID').value = cleanID;
             
-            // Smart Auto-Attach Name & WhatsApp Number instantly
             if (membersDatabase[cleanID]) {
               const m = membersDatabase[cleanID];
               document.getElementById('posName').value = m.name || '';
               document.getElementById('posPhone').value = m.phone || '';
-              alert(`✅ সফলভাবে স্ক্যান ও তথ্য অটো-অ্যাটাচ হয়েছে!\n👤 নাম: ${m.name}\n📞 ফোন: ${m.phone || 'নেই'}`);
+              alert(`✅ শিট থেকে সফলভাবে অটো-অ্যাটাচ হয়েছে!\n👤 নাম: ${m.name}\n📞 ফোন: ${m.phone || 'নেই'}`);
             } else {
-              alert(`⚠️ স্ক্যান সফল! ID: ${cleanID}\n(এই কার্ডের কোনো পূর্বের তথ্য ডাটাবেসে নেই, দয়া করে নাম ও নম্বর লিখে দিন।)`);
+              alert(`⚠️ স্ক্যান সফল! ID: ${cleanID}\n(এই কার্ডটি ডেটাবেসে নেই, নাম ও নম্বর লিখে দিন।)`);
             }
 
             stopScanner();
           },
           (err) => {}
         ).catch(err => {
-          alert("ক্যামেরা অন করা যায়নি বা পারমিশন নেই।");
+          alert("ক্যামেরা অন করা যায়নি।");
           readerDiv.style.display = 'none';
         });
       }
@@ -1085,33 +1064,16 @@
 
       lastReceiptData = newTx;
       transactions.unshift(newTx);
-
-      if (referralID && membersDatabase[referralID]) {
-        const refBonusTx = {
-          id: String(Date.now() + 1),
-          timestamp: new Date().toLocaleString('bn-BD'),
-          type: 'member',
-          cardID: referralID,
-          name: "Referral Bonus from " + name,
-          phone: "",
-          txType: 'sale',
-          amount: 0,
-          points: 0,
-          bonusStamps: 5
-        };
-        transactions.unshift(refBonusTx);
-      }
-
-      buildMembersDatabase();
       renderHistory();
       updateMetrics();
 
-      fetch(SCRIPT_URL, {
+      // Send POS Transaction to Transactions Sheet
+      fetch(TRANSACTIONS_SCRIPT_URL, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newTx)
-      }).catch(err => console.error("Sheet sync error:", err));
+      }).catch(err => console.error("Transactions sheet sync error:", err));
 
       showReceiptModal(newTx);
 
@@ -1123,9 +1085,8 @@
     }
 
     function deleteReceipt(id) {
-      if (confirm("আপনি কি এই রসিদ বা লেনদেনটি মুছতে চান?")) {
+      if (confirm("আপনি কি এই রসিদটি মুছতে চান?")) {
         transactions = transactions.filter(t => t.id !== id);
-        buildMembersDatabase();
         renderHistory();
         updateMetrics();
         alert("🗑️ রসিদ সফলভাবে মুছে ফেলা হয়েছে!");

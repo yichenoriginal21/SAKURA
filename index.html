@@ -348,7 +348,7 @@
     .badge-member { background: rgba(225, 29, 72, 0.2); color: var(--pink-primary); }
     .badge-guest { background: rgba(148, 163, 184, 0.2); color: var(--text-muted); }
 
-    /* DIGITAL RECEIPT MODAL */
+    /* DIGITAL E-RECEIPT MODAL */
     #receiptModal {
       position: fixed;
       inset: 0;
@@ -373,7 +373,7 @@
       box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
 
-    /* Membership Card Frame */
+    /* MEMBERSHIP CARD FRAME (VISUAL) */
     .card-frame {
       width: 100%;
       max-width: 580px;
@@ -424,6 +424,12 @@
       background: rgba(0, 0, 0, 0.25);
       font-size: 0.6rem;
     }
+    .stamp-box.active {
+      background: var(--gold-accent);
+      color: #000;
+      border-style: solid;
+      font-weight: bold;
+    }
 
     .card-qr-container {
       background: #ffffff;
@@ -466,6 +472,7 @@
         <div><b>কাস্টমার:</b> <span id="rcptName"></span></div>
         <div><b>কার্ড আইডি:</b> <span id="rcptCard"></span></div>
         <div><b>ফোন:</b> <span id="rcptPhone"></span></div>
+        <div><b>স্ট্যাম্প ও ভিজিট:</b> <span id="rcptVisits" style="color: #e11d48; font-weight: bold;"></span></div>
         <hr style="border: 0.5px solid #eee;">
         <div style="display: flex; justify-content: space-between; font-size: 1rem; font-weight: bold;">
           <span>মোট পরিমাণ:</span>
@@ -535,7 +542,7 @@
       <!-- POS Entry Panel -->
       <div class="panel">
         <div class="panel-title">
-          <i class="fa-solid fa-cart-shopping"></i> দ্রুত বিক্রি ও এন্ট্রি সিস্টেম
+          <i class="fa-solid fa-cart-shopping"></i> দ্রুত বিক্রি ও পলিসি ট্র্যাকিং সিস্টেম (সর্বনিম্ন ৳১০০ বাজার = ১ স্ট্যাম্প)
         </div>
 
         <div class="type-selector">
@@ -544,7 +551,7 @@
         </div>
 
         <button class="btn btn-scanner" id="scanCameraBtn" onclick="toggleCameraScanner()">
-          <i class="fa-solid fa-camera"></i> ক্যামেরা দিয়ে মেম্বার QR স্ক্যান করুন (অটো-অ্যাটাচ)
+          <i class="fa-solid fa-camera"></i> ক্যামেরা দিয়ে মেম্বার QR স্ক্যান করুন (অটো-অ্যাটাচ নাম ও নম্বর)
         </button>
         <div id="reader"></div>
 
@@ -569,6 +576,14 @@
             </div>
           </div>
 
+          <!-- Referral ID Field -->
+          <div class="input-row" style="margin-bottom: 10px;" id="referralRow">
+            <div class="input-group">
+              <label>রেফারেল মেম্বার আইডি (যদি নতুন মেম্বার হন, রেফারার পাবে +৫ স্ট্যাম্প):</label>
+              <input type="text" id="posReferralID" placeholder="যেমন: SKR-123456 (ঐচ্ছিক)">
+            </div>
+          </div>
+
           <div class="input-row" style="margin-bottom: 10px;">
             <div class="input-group">
               <label>বিক্রির পরিমাণ (টাকা ৳):</label>
@@ -577,7 +592,7 @@
             <div class="input-group">
               <label>লেনদেনের ধরন:</label>
               <select id="posTxType">
-                <option value="sale">সাধারণ কেনাকাটা (পয়েন্ট জমা)</option>
+                <option value="sale">সাধারণ কেনাকাটা (৳৫০০ = ১ পয়েন্ট, ৳১০০+ = ১ স্ট্যাম্প)</option>
                 <option value="redeem">পয়েন্ট ক্যাশব্যাক/রিডিম (৫০ পয়েন্ট = ৳৫০)</option>
               </select>
             </div>
@@ -585,14 +600,14 @@
 
           <!-- Presets -->
           <div style="display: flex; gap: 6px; margin-bottom: 12px;">
-            <button type="button" class="btn-preset" onclick="setPreset(100)">৳১০০</button>
-            <button type="button" class="btn-preset" onclick="setPreset(500)">৳৫০০</button>
+            <button type="button" class="btn-preset" onclick="setPreset(100)">৳১০০ (স্ট্যাম্প)</button>
+            <button type="button" class="btn-preset" onclick="setPreset(500)">৳৫০০ (পয়েন্ট)</button>
             <button type="button" class="btn-preset" onclick="setPreset(1000)">৳১০০০</button>
             <button type="button" class="btn-preset" onclick="setPreset(2000)">৳২০০০</button>
           </div>
 
           <button type="submit" class="btn">
-            <i class="fa-solid fa-check-circle"></i> লেনদেন সেভ ও রসিদ তৈরি করুন
+            <i class="fa-solid fa-check-circle"></i> লেনদেন সেভ ও পলিসি আপডেট করুন
           </button>
         </form>
       </div>
@@ -608,7 +623,7 @@
                 <th>নাম ও আইডি</th>
                 <th>টাইপ</th>
                 <th>টাকা</th>
-                <th>পয়েন্ট</th>
+                <th>পয়েন্ট ও স্ট্যাম্প</th>
                 <th>অ্যাকশন</th>
               </tr>
             </thead>
@@ -626,9 +641,9 @@
       
       <!-- MEMBER HUB SCANNER & DETAILS AUTO-ATTACH -->
       <div class="panel" style="border-color: var(--gold-accent);">
-        <div class="panel-title" style="color: var(--gold-accent);"><i class="fa-solid fa-qrcode"></i> মেম্বার হাব স্ক্যানার ও অটো-অ্যাটাচ তথ্য</div>
+        <div class="panel-title" style="color: var(--gold-accent);"><i class="fa-solid fa-qrcode"></i> মেম্বার হাব স্ক্যানার ও লাইভ মাইলস্টোন ট্র্যাকার</div>
         <button class="btn btn-scanner" onclick="toggleHubScanner()">
-          <i class="fa-solid fa-camera"></i> মেম্বার কার্ড স্ক্যান করুন (অটো-অ্যাটাচ)
+          <i class="fa-solid fa-camera"></i> মেম্বার কার্ড স্ক্যান করুন (অটো-অ্যাটাচ নাম ও নম্বর)
         </button>
         <div id="hubReader"></div>
         <div class="input-row" style="margin-top: 10px;">
@@ -637,11 +652,12 @@
             <input type="text" id="hubCardId" placeholder="যেমন: SKR-954443" oninput="loadHubMember()" onchange="loadHubMember()">
           </div>
         </div>
-        <div id="hubDetailsBox" style="background: #0f172a; padding: 12px; border-radius: 8px; font-size: 0.9rem; display: none; margin-top: 5px;"></div>
+        <div id="hubDetailsBox" style="background: #0f172a; padding: 14px; border-radius: 8px; font-size: 0.9rem; display: none; margin-top: 5px; line-height: 1.5;"></div>
       </div>
 
+      <!-- CARD ISSUANCE PANEL -->
       <div class="panel">
-        <div class="panel-title"><i class="fa-solid fa-id-card"></i> মেম্বারশিপ কার্ড জেনারেটর (অটো-ফিলযুক্ত)</div>
+        <div class="panel-title"><i class="fa-solid fa-id-card"></i> নতুন মেম্বারশিপ কার্ড জেনারেটর (ওয়েলকাম গিফট: ১ স্ট্যাম্প + ২ পয়েন্ট)</div>
         
         <div class="input-row">
           <div class="input-group" style="flex: 2;">
@@ -664,19 +680,22 @@
           </div>
         </div>
 
-        <button class="btn btn-green" onclick="downloadCardPNG()">
-          <i class="fa-solid fa-download"></i> মেম্বারশিপ কার্ড PNG ডাউনলোড করুন (ফি: ৳১৫)
+        <button class="btn btn-green" onclick="issueNewMemberCard()">
+          <i class="fa-solid fa-gift"></i> নতুন মেম্বার নিবন্ধন করুন ও ওয়েলকাম গিফট দিন (ফি: ৳১৫)
+        </button>
+        <button class="btn btn-green" style="background: #1d4ed8; border-color: #3b82f6;" onclick="downloadCardPNG()">
+          <i class="fa-solid fa-download"></i> মেম্বারশিপ কার্ড PNG ডাউনলোড করুন
         </button>
       </div>
 
-      <!-- Printable Visual Card Preview -->
+      <!-- Printable Visual Card Preview with Milestone Stamps -->
       <div class="card-frame" id="membershipCard">
         <div class="card-header">
           <div style="display: flex; align-items: center; gap: 8px;">
             <div style="width: 34px; height: 34px; background: var(--gold-accent); color: #38040f; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900;">咲</div>
             <div>
               <div style="font-size: 1.1rem; font-weight: bold;">সাকুরা মার্কেট</div>
-              <div style="font-size: 0.6rem; color: #ffd0e0; letter-spacing: 1px;">LIFETIME MEMBERSHIP</div>
+              <div style="font-size: 0.6rem; color: #ffd0e0; letter-spacing: 1px;">LIFETIME MEMBERSHIP (ফি: ৳১৫)</div>
             </div>
           </div>
           <div id="cardSerialBadge" style="background: rgba(0,0,0,0.4); border: 1px solid var(--gold-accent); padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; color: var(--gold-accent);">SKR-000000</div>
@@ -684,15 +703,32 @@
 
         <div style="background: rgba(0,0,0,0.3); padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; display: flex; justify-content: space-between;">
           <span>নাম: <strong id="cardVisualName">...................</strong></span>
-          <span style="color: #ffd0e0; font-size: 0.7rem;">আজীবন মেয়াদ (ফি: ৳১৫)</span>
+          <span style="color: var(--gold-accent); font-size: 0.75rem;" id="cardVisualTier">ব্রোঞ্জ স্ট্যাটাস (০ ভিজিট)</span>
         </div>
 
+        <!-- 20 Visits Milestone Stamp Grid -->
         <div class="card-middle">
-          <div class="stamp-grid">
-            <div class="stamp-box">১</div><div class="stamp-box">২</div><div class="stamp-box">৩</div><div class="stamp-box">৪</div><div class="stamp-box" style="border-color:var(--gold-accent);">★</div>
-            <div class="stamp-box">৬</div><div class="stamp-box">৭</div><div class="stamp-box">৮</div><div class="stamp-box">৯</div><div class="stamp-box" style="border-color:var(--gold-accent);">★</div>
-            <div class="stamp-box">১১</div><div class="stamp-box">১২</div><div class="stamp-box">১৩</div><div class="stamp-box">১৪</div><div class="stamp-box">১৫</div>
-            <div class="stamp-box">১৬</div><div class="stamp-box">১৭</div><div class="stamp-box">১৮</div><div class="stamp-box">১৯</div><div class="stamp-box" style="border-color:#2ecc71;">🎁</div>
+          <div class="stamp-grid" id="cardVisualStampGrid">
+            <div class="stamp-box" id="stamp-1">১</div>
+            <div class="stamp-box" id="stamp-2">২</div>
+            <div class="stamp-box" id="stamp-3">৩</div>
+            <div class="stamp-box" id="stamp-4">৪</div>
+            <div class="stamp-box" id="stamp-5" style="border-color:var(--gold-accent);">★</div>
+            <div class="stamp-box" id="stamp-6">৬</div>
+            <div class="stamp-box" id="stamp-7">৭</div>
+            <div class="stamp-box" id="stamp-8">৮</div>
+            <div class="stamp-box" id="stamp-9">৯</div>
+            <div class="stamp-box" id="stamp-10" style="border-color:var(--gold-accent);">★</div>
+            <div class="stamp-box" id="stamp-11">১১</div>
+            <div class="stamp-box" id="stamp-12">১২</div>
+            <div class="stamp-box" id="stamp-13">১৩</div>
+            <div class="stamp-box" id="stamp-14">১৪</div>
+            <div class="stamp-box" id="stamp-15">১৫</div>
+            <div class="stamp-box" id="stamp-16">১৬</div>
+            <div class="stamp-box" id="stamp-17">১৭</div>
+            <div class="stamp-box" id="stamp-18">১৮</div>
+            <div class="stamp-box" id="stamp-19">১৯</div>
+            <div class="stamp-box" id="stamp-20" style="border-color:#2ecc71;">🎁</div>
           </div>
           <div class="card-qr-container">
             <div id="qrcode"></div>
@@ -700,7 +736,7 @@
         </div>
 
         <div style="display: flex; justify-content: space-between; font-size: 0.65rem; border-top: 1px solid rgba(255,255,255,0.1); pt: 4px;">
-          <span style="color: var(--gold-accent); font-weight: bold;">🎯 ২০ ভিজিট = এক্সক্লুসিভ বেনিফিট আনলক!</span>
+          <span style="color: var(--gold-accent); font-weight: bold;">🎯 ২০ ভিজিট = ফুল মেম্বার বেনিফিট আনলক!</span>
           <span>📞 01789504376, আম্বরখানা, সিলেট</span>
         </div>
       </div>
@@ -766,17 +802,20 @@
       const guestBtn = document.getElementById('typeGuestBtn');
       const memberInputs = document.getElementById('memberInputsGroup');
       const scanBtn = document.getElementById('scanCameraBtn');
+      const referralRow = document.getElementById('referralRow');
 
       if (type === 'member') {
         memberBtn.classList.add('active');
         guestBtn.classList.remove('active');
         memberInputs.style.display = 'block';
         scanBtn.style.display = 'block';
+        referralRow.style.display = 'flex';
       } else {
         guestBtn.classList.add('active');
         memberBtn.classList.remove('active');
         memberInputs.style.display = 'none';
         scanBtn.style.display = 'none';
+        referralRow.style.display = 'none';
         if (html5QrCode) stopScanner();
       }
     }
@@ -813,19 +852,29 @@
               phone: t.phone || t.Phone || "", 
               totalSpend: 0, 
               totalPoints: 0,
-              purchasesCount: 0 
+              stamps: 0,
+              visits: 0
             };
           }
           if (t.name || t.Name) membersDatabase[rawCard].name = t.name || t.Name;
           if (t.phone || t.Phone) membersDatabase[rawCard].phone = t.phone || t.Phone;
-          membersDatabase[rawCard].totalSpend += parseFloat(t.amount || t.Amount || 0);
+          
+          const amt = parseFloat(t.amount || t.Amount || 0);
+          membersDatabase[rawCard].totalSpend += amt;
           membersDatabase[rawCard].totalPoints += parseFloat(t.points || t.Points || 0);
-          if (t.txType === 'sale' || t.TransactionType === 'sale') membersDatabase[rawCard].purchasesCount += 1;
+          
+          if (amt >= 100 && (t.txType === 'sale' || t.TransactionType === 'sale')) {
+            membersDatabase[rawCard].stamps += 1;
+            membersDatabase[rawCard].visits += 1;
+          }
+          if (t.bonusStamps) {
+            membersDatabase[rawCard].stamps += parseInt(t.bonusStamps);
+          }
         }
       });
     }
 
-    // Direct Smart Auto-Fetch for POS Section
+    // Direct Smart Auto-Fetch for POS Section (Attaches Name & WhatsApp automatically)
     function autoFetchMember() {
       const cardID = document.getElementById('posCardID').value.trim().toUpperCase();
       if (cardID && membersDatabase[cardID]) {
@@ -833,6 +882,52 @@
         document.getElementById('posName').value = m.name || '';
         document.getElementById('posPhone').value = m.phone || '';
       }
+    }
+
+    // Issue New Member Card with Welcome Gift (1 Stamp + 2 Points)
+    function issueNewMemberCard() {
+      const name = document.getElementById('cardNameInput').value.trim();
+      const cardId = document.getElementById('cardIdInput').value.trim().toUpperCase();
+      const phone = document.getElementById('cardPhoneInput').value.trim();
+
+      if (!name) {
+        alert("⚠️ সদস্যের নাম লিখুন।");
+        document.getElementById('cardNameInput').focus();
+        return;
+      }
+
+      const welcomeTx = {
+        id: String(Date.now()),
+        timestamp: new Date().toLocaleString('bn-BD'),
+        type: 'member',
+        cardID: cardId,
+        name: name,
+        phone: phone,
+        txType: 'sale',
+        amount: 15, // 15 BDT card fee
+        points: 2,  // Welcome points
+        bonusStamps: 1 // Welcome stamp
+      };
+
+      transactions.unshift(welcomeTx);
+      buildMembersDatabase();
+      renderHistory();
+      updateMetrics();
+
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(welcomeTx)
+      }).catch(err => console.error("Sheet sync error:", err));
+
+      alert(`🎉 সাকুরা মার্কেট মেম্বারশিপ সফলভাবে তৈরি হয়েছে!\n\n🎁 ওয়েলকাম উপহার: ১টি ফ্রি স্ট্যাম্প ও ২ পয়েন্ট যুক্ত করা হয়েছে।`);
+      loadHubMemberDirect(cardId);
+    }
+
+    function loadHubMemberDirect(cardId) {
+      document.getElementById('hubCardId').value = cardId;
+      loadHubMember();
     }
 
     // Hub Scanner & Info Attach
@@ -849,7 +944,8 @@
           { facingMode: "environment" },
           { fps: 10, qrbox: { width: 200, height: 200 } },
           (decodedText) => {
-            document.getElementById('hubCardId').value = decodedText;
+            const cleanID = decodedText.trim().toUpperCase();
+            document.getElementById('hubCardId').value = cleanID;
             if (hubQrCode) hubQrCode.stop().then(() => readerDiv.style.display = 'none');
             loadHubMember();
           },
@@ -869,26 +965,46 @@
       box.style.display = 'block';
       if (membersDatabase[cardId]) {
         const m = membersDatabase[cardId];
+        let visits = m.visits || m.stamps || 0;
+        let tierName = "ব্রোঞ্জ স্ট্যাটাস (৫ ভিজিট)";
+        if (visits >= 20) tierName = "🏆 ফুল মেম্বার বেনিফিট আনলকড (২০+ ভিজিট)";
+        else if (visits >= 10) tierName = "🥈 সিলভার রিওয়ার্ড (১০+ ভিজিট)";
+        else if (visits >= 5) tierName = "🥉 ব্রোঞ্জ স্ট্যাটাস (৫+ ভিজিট)";
+
         box.innerHTML = `
-          ✅ <b>মেম্বার সংযুক্ত ও তথ্য অটো-ফিল হয়েছে!</b><br>
-          🆔 আইডি: <b>${cardId}</b><br>
-          👤 নাম: <b>${m.name}</b><br>
+          ✅ <b>মেম্বার সংযুক্ত ও তথ্য অটো-অ্যাটাচ হয়েছে!</b><br>
+          🆔 আইডি: <b>${cardId}</b> | নাম: <b>${m.name}</b><br>
           📞 হোয়াটসঅ্যাপ: <span style="color: var(--green-status); font-weight: bold;">${m.phone || 'নেই'}</span><br>
-          💰 মোট কেনাকাটা: ৳${m.totalSpend.toFixed(2)} | ⭐ পয়েন্ট: ${m.totalPoints.toFixed(2)}
+          ⭐ মোট পয়েন্ট: <b>${m.totalPoints.toFixed(2)}</b><br>
+          🎯 মোট ভিজিট ও স্ট্যাম্প: <b>${visits} টি</b><br>
+          🎖️ বর্তমান স্ট্যাটাস: <b style="color: var(--gold-accent);">${tierName}</b>
         `;
 
         document.getElementById('cardIdInput').value = cardId;
         document.getElementById('cardNameInput').value = m.name || '';
         document.getElementById('cardPhoneInput').value = m.phone || '';
         document.getElementById('cardSerialBadge').innerText = cardId;
+        document.getElementById('cardVisualTier').innerText = tierName;
         updateCardVisual();
         updateQRCode(cardId);
+        updateVisualStamps(visits);
 
       } else {
-        box.innerHTML = `⚠️ এই কার্ড আইডি (${cardId}) দিয়ে এখনো গুগল শিটে কোনো রেকর্ড তৈরি হয়নি। নতুন বিক্রি সাবমিট করলেই এটি অটো সেভ হবে।`;
+        box.innerHTML = `⚠️ এই কার্ড আইডি (${cardId}) দিয়ে এখনো কোনো রেকর্ড নেই। নিচে 'নতুন মেম্বার নিবন্ধন করুন' বাটন দিয়ে কার্ড ইস্যু করুন।`;
       }
     }
 
+    function updateVisualStamps(activeStamps) {
+      for (let i = 1; i <= 20; i++) {
+        const box = document.getElementById(`stamp-${i}`);
+        if (box) {
+          if (i <= activeStamps) box.classList.add('active');
+          else box.classList.remove('active');
+        }
+      }
+    }
+
+    // POS QR Scanner with Automatic Name & Phone Auto-Attachment
     function toggleCameraScanner() {
       const readerDiv = document.getElementById('reader');
       if (readerDiv.style.display === 'block') {
@@ -902,7 +1018,17 @@
           (decodedText) => {
             const cleanID = decodedText.trim().toUpperCase();
             document.getElementById('posCardID').value = cleanID;
-            autoFetchMember();
+            
+            // Smart Auto-Attach Name & WhatsApp Number instantly
+            if (membersDatabase[cleanID]) {
+              const m = membersDatabase[cleanID];
+              document.getElementById('posName').value = m.name || '';
+              document.getElementById('posPhone').value = m.phone || '';
+              alert(`✅ সফলভাবে স্ক্যান ও তথ্য অটো-অ্যাটাচ হয়েছে!\n👤 নাম: ${m.name}\n📞 ফোন: ${m.phone || 'নেই'}`);
+            } else {
+              alert(`⚠️ স্ক্যান সফল! ID: ${cleanID}\n(এই কার্ডের কোনো পূর্বের তথ্য ডাটাবেসে নেই, দয়া করে নাম ও নম্বর লিখে দিন।)`);
+            }
+
             stopScanner();
           },
           (err) => {}
@@ -928,14 +1054,17 @@
       const amount = parseFloat(document.getElementById('posAmount').value) || 0;
       const txType = document.getElementById('posTxType').value;
       const activeCustomerType = document.getElementById('typeMemberBtn').classList.contains('active') ? 'member' : 'guest';
+      const referralID = document.getElementById('posReferralID').value.trim().toUpperCase();
       
       let cardID = "GUEST";
       let pointsEarned = 0;
+      let visitStamps = 0;
 
       if (activeCustomerType === 'member') {
         cardID = document.getElementById('posCardID').value.trim().toUpperCase() || ("SKR-" + Math.floor(100000 + Math.random() * 900000));
         if (txType === 'sale') {
           pointsEarned = amount / 500;
+          if (amount >= 100) visitStamps = 1;
         } else if (txType === 'redeem') {
           pointsEarned = -50;
         }
@@ -950,12 +1079,29 @@
         phone: phone,
         txType: txType,
         amount: txType === 'redeem' ? 0 : amount,
-        points: pointsEarned
+        points: pointsEarned,
+        visits: visitStamps
       };
 
       lastReceiptData = newTx;
-
       transactions.unshift(newTx);
+
+      if (referralID && membersDatabase[referralID]) {
+        const refBonusTx = {
+          id: String(Date.now() + 1),
+          timestamp: new Date().toLocaleString('bn-BD'),
+          type: 'member',
+          cardID: referralID,
+          name: "Referral Bonus from " + name,
+          phone: "",
+          txType: 'sale',
+          amount: 0,
+          points: 0,
+          bonusStamps: 5
+        };
+        transactions.unshift(refBonusTx);
+      }
+
       buildMembersDatabase();
       renderHistory();
       updateMetrics();
@@ -973,6 +1119,7 @@
       document.getElementById('posCardID').value = '';
       document.getElementById('posName').value = '';
       document.getElementById('posPhone').value = '';
+      document.getElementById('posReferralID').value = '';
     }
 
     function deleteReceipt(id) {
@@ -991,6 +1138,7 @@
       document.getElementById('rcptName').innerText = tx.name;
       document.getElementById('rcptCard').innerText = tx.cardID;
       document.getElementById('rcptPhone').innerText = tx.phone || 'নেই';
+      document.getElementById('rcptVisits').innerText = tx.visits ? `+${tx.visits} ভিজিট স্ট্যাম্প যুক্ত হয়েছে` : 'প্রযোজ্য নয়';
       document.getElementById('rcptAmount').innerText = `৳ ${tx.amount.toFixed(2)}`;
       document.getElementById('rcptPoints').innerText = `${tx.points >= 0 ? '+' : ''}${tx.points.toFixed(2)} পয়েন্ট`;
       
@@ -1018,8 +1166,6 @@
 
     function sendWhatsAppDirect(t) {
       let rawPhone = t.phone ? t.phone.replace(/[^0-9]/g, '') : '';
-      
-      // Bangladeshi Country Code (+88) formatting check
       let formattedPhone = rawPhone;
       if (rawPhone.length === 11 && rawPhone.startsWith('01')) {
         formattedPhone = '88' + rawPhone;
@@ -1028,7 +1174,7 @@
       }
 
       const msg = `🌸 *সাকুরা মার্কেট (আম্বরখানা, সিলেট)* 🌸\n` +
-                  `📦 ডিজিটাল ই-রসিদ\n\n` +
+                  `📦 ডিজিটাল ই-রসিদ ও মেম্বারশিপ আপডেট\n\n` +
                   `👤 নাম: ${t.name}\n` +
                   `🆔 কার্ড: ${t.cardID}\n` +
                   `💰 মোট পরিমাণ: ৳${t.amount.toFixed(2)}\n` +
@@ -1053,7 +1199,10 @@
           <td><b>${t.name}</b><br><small style="color: var(--text-muted);">${t.cardID}</small></td>
           <td><span class="badge ${t.type === 'member' ? 'badge-member' : 'badge-guest'}">${t.type === 'member' ? 'মেম্বার' : 'গেস্ট'}</span></td>
           <td>৳ ${parseFloat(t.amount || 0).toFixed(2)}</td>
-          <td style="color: ${parseFloat(t.points || 0) >= 0 ? 'var(--green-status)' : 'red'};">${parseFloat(t.points || 0) >= 0 ? '+' : ''}${parseFloat(t.points || 0).toFixed(2)}</td>
+          <td style="color: ${parseFloat(t.points || 0) >= 0 ? 'var(--green-status)' : 'red'};">
+            ${parseFloat(t.points || 0) >= 0 ? '+' : ''}${parseFloat(t.points || 0).toFixed(2)} পঃ
+            ${t.visits ? `<br><small style="color:var(--gold-accent);">+${t.visits} স্ট্যাম্প</small>` : ''}
+          </td>
           <td>
             <button class="btn btn-whatsapp" style="padding: 4px 8px; font-size: 0.75rem; display: inline-flex;" onclick='sendWhatsAppDirect(${JSON.stringify(t)})' title="হোয়াটসঅ্যাপে পাঠান"><i class="fa-brands fa-whatsapp"></i></button>
             <button class="btn btn-danger" onclick="deleteReceipt('${t.id}')" title="মুছে ফেলুন"><i class="fa-solid fa-trash"></i></button>

@@ -527,27 +527,28 @@
       flex: 1;
     }
 
-    /* Clean empty circles ready for manual stamps */
+    /* Pure WHITE stamp circles so red ink is clearly visible! */
     .stamp-box {
       width: 32px;
       height: 32px;
-      border: 2px dashed #ffffff;
+      border: 1.5px solid #000000;
       border-radius: 50%;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      background: rgba(255, 255, 255, 0.05);
+      background: #ffffff;
       font-size: 0.6rem;
-      color: #a3a3a3;
+      color: #171717;
       position: relative;
+      box-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
     }
 
-    /* Milestone indicator highlights */
     .stamp-box.milestone-star::after {
       content: "★";
-      color: #ffffff;
+      color: #000000;
       font-size: 0.75rem;
+      font-weight: bold;
     }
 
     .stamp-box.milestone-gift::after {
@@ -556,8 +557,8 @@
     }
 
     .stamp-box.active {
-      background: #ffffff;
-      color: #000000;
+      background: #000000;
+      color: #ffffff;
       border: 2px solid #ffffff;
       font-weight: 900;
     }
@@ -847,7 +848,7 @@
         </button>
       </div>
 
-      <!-- PURE JAPANESE MONOCHROME BLACK & WHITE MEMBERSHIP CARD -->
+      <!-- PURE JAPANESE MONOCHROME CARD WITH WHITE STAMP CIRCLES -->
       <div class="card-frame" id="membershipCard">
         <!-- Top Header -->
         <div class="jp-card-header">
@@ -872,7 +873,7 @@
           </div>
         </div>
 
-        <!-- Middle Stamp Grid (No Numbers) & QR -->
+        <!-- Middle Stamp Grid & QR -->
         <div class="jp-card-body-grid">
           <div class="stamp-grid" id="cardVisualStampGrid">
             <div class="stamp-box"></div>
@@ -1359,7 +1360,15 @@
     function updateQRCode(text) {
       const qrDiv = document.getElementById('qrcode');
       qrDiv.innerHTML = "";
-      new QRCode(qrDiv, { text: text, width: 58, height: 58, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
+      // QR code with inverted dark colors matching the card aesthetic perfectly
+      new QRCode(qrDiv, { 
+        text: text, 
+        width: 58, 
+        height: 58, 
+        colorDark: "#000000", 
+        colorLight: "#ffffff", 
+        correctLevel: QRCode.CorrectLevel.H 
+      });
     }
 
     function updateCardVisual() {

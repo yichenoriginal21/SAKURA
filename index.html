@@ -7,7 +7,7 @@
   
   <!-- FontAwesome & Google Fonts -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@500;600;700&family=Noto+Serif+JP:wght@700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@500;600;700&family=Noto+Serif+JP:wght@700;900&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
   
   <!-- Libraries for QR Scanner, QRCode & HTML Canvas -->
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
@@ -373,76 +373,235 @@
       box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
 
-    /* MEMBERSHIP CARD FRAME (VISUAL) */
+    /* PURE JAPANESE MONOCHROME BLACK & WHITE MEMBERSHIP CARD */
     .card-frame {
       width: 100%;
       max-width: 580px;
-      height: 350px;
-      background: linear-gradient(135deg, #420613 0%, #680d23 50%, #35030e 100%);
-      border: 3px solid var(--gold-accent);
-      border-radius: 14px;
-      padding: 16px;
+      min-height: 360px;
+      background: #000000;
+      border: 3px solid #ffffff;
+      border-radius: 16px;
+      padding: 18px;
       position: relative;
       margin: 0 auto;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       color: #ffffff;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.9), inset 0 0 15px rgba(255, 255, 255, 0.15);
+      overflow: hidden;
     }
 
-    .card-header {
+    /* Japanese Traditional Vertical Kanji Watermark */
+    .card-frame::before {
+      content: "櫻市場会員証";
+      position: absolute;
+      right: 14px;
+      top: 52%;
+      transform: translateY(-50%);
+      font-size: 85px;
+      font-family: 'Noto Serif JP', serif;
+      font-weight: 900;
+      color: rgba(255, 255, 255, 0.035);
+      writing-mode: vertical-rl;
+      pointer-events: none;
+      letter-spacing: 12px;
+    }
+
+    /* Top Header Section */
+    .jp-card-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid rgba(245, 184, 46, 0.3);
-      padding-bottom: 6px;
+      border-bottom: 2px solid #ffffff;
+      padding-bottom: 10px;
+      position: relative;
+      z-index: 2;
     }
 
-    .card-middle {
+    .jp-brand-cluster {
       display: flex;
-      gap: 10px;
       align-items: center;
+      gap: 12px;
+    }
+
+    .jp-hanko-seal {
+      width: 44px;
+      height: 44px;
+      background: #ffffff;
+      border: 2px solid #000000;
+      border-radius: 8px;
+      color: #000000;
+      font-size: 24px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Noto Serif JP', serif;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    }
+
+    .jp-text-stack {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .jp-sub-heading {
+      font-size: 0.65rem;
+      color: #a3a3a3;
+      letter-spacing: 3px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .jp-main-heading {
+      font-size: 1.3rem;
+      font-weight: 900;
+      color: #ffffff;
+      letter-spacing: 1px;
+      line-height: 1.1;
+      font-family: 'Noto Serif JP', serif;
+    }
+
+    .jp-serial-pill {
+      background: #171717;
+      border: 1.5px solid #ffffff;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      color: #ffffff;
+      font-family: 'Space Mono', monospace;
+      font-weight: 700;
+    }
+
+    /* Member Info Bar */
+    .jp-member-info-bar {
+      background: #111111;
+      border: 1px solid #404040;
+      padding: 8px 14px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    .jp-member-name-label {
+      font-size: 0.7rem;
+      color: #737373;
+      letter-spacing: 1px;
+    }
+
+    .jp-member-name-val {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .jp-tier-badge {
+      background: #ffffff;
+      border: 1px solid #000000;
+      color: #000000;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+    }
+
+    /* Middle Stamp Grid (No Numbers) & QR Section */
+    .jp-card-body-grid {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      position: relative;
+      z-index: 2;
+      margin: 4px 0;
     }
 
     .stamp-grid {
       display: grid;
       grid-template-columns: repeat(10, 1fr);
-      gap: 4px;
+      gap: 6px;
       flex: 1;
     }
 
+    /* Clean empty circles ready for manual stamps */
     .stamp-box {
       width: 32px;
       height: 32px;
-      border: 1px dashed rgba(245, 184, 46, 0.6);
+      border: 2px dashed #ffffff;
       border-radius: 50%;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      background: rgba(0, 0, 0, 0.25);
+      background: rgba(255, 255, 255, 0.05);
       font-size: 0.6rem;
-    }
-    .stamp-box.active {
-      background: var(--gold-accent);
-      color: #000;
-      border-style: solid;
-      font-weight: bold;
+      color: #a3a3a3;
+      position: relative;
     }
 
-    .card-qr-container {
+    /* Milestone indicator highlights */
+    .stamp-box.milestone-star::after {
+      content: "★";
+      color: #ffffff;
+      font-size: 0.75rem;
+    }
+
+    .stamp-box.milestone-gift::after {
+      content: "🎁";
+      font-size: 0.75rem;
+    }
+
+    .stamp-box.active {
       background: #ffffff;
-      padding: 4px;
-      border-radius: 6px;
+      color: #000000;
+      border: 2px solid #ffffff;
+      font-weight: 900;
+    }
+
+    .stamp-box.active::after {
+      content: "🌸";
+      font-size: 0.75rem;
+    }
+
+    .jp-qr-box {
+      background: #ffffff;
+      padding: 5px;
+      border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 65px;
-      height: 65px;
+      width: 72px;
+      height: 72px;
+      border: 2px solid #ffffff;
     }
 
-    #qrcode img { width: 55px !important; height: 55px !important; }
+    #qrcode img { width: 58px !important; height: 58px !important; }
+
+    /* Card Footer */
+    .jp-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.68rem;
+      border-top: 1.5px solid #404040;
+      padding-top: 8px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .jp-footer-gold {
+      color: #ffffff;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+    }
+
+    .jp-footer-loc {
+      color: #a3a3a3;
+    }
   </style>
 </head>
 <body>
@@ -688,56 +847,64 @@
         </button>
       </div>
 
-      <!-- Printable Visual Card Preview with Milestone Stamps -->
+      <!-- PURE JAPANESE MONOCHROME BLACK & WHITE MEMBERSHIP CARD -->
       <div class="card-frame" id="membershipCard">
-        <div class="card-header">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <div style="width: 34px; height: 34px; background: var(--gold-accent); color: #38040f; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900;">咲</div>
-            <div>
-              <div style="font-size: 1.1rem; font-weight: bold;">সাকুরা মার্কেট</div>
-              <div style="font-size: 0.6rem; color: #ffd0e0; letter-spacing: 1px;">LIFETIME MEMBERSHIP (ফি: ৳১৫)</div>
+        <!-- Top Header -->
+        <div class="jp-card-header">
+          <div class="jp-brand-cluster">
+            <div class="jp-hanko-seal">咲</div>
+            <div class="jp-text-stack">
+              <span class="jp-sub-heading">Sakura Market VIP Hub</span>
+              <span class="jp-main-heading">সাকুরা মার্কেট</span>
             </div>
           </div>
-          <div id="cardSerialBadge" style="background: rgba(0,0,0,0.4); border: 1px solid var(--gold-accent); padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; color: var(--gold-accent);">SKR-000000</div>
+          <div class="jp-serial-pill" id="cardSerialBadge">SKR-000000</div>
         </div>
 
-        <div style="background: rgba(0,0,0,0.3); padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; display: flex; justify-content: space-between;">
-          <span>নাম: <strong id="cardVisualName">...................</strong></span>
-          <span style="color: var(--gold-accent); font-size: 0.75rem;" id="cardVisualTier">ব্রোঞ্জ স্ট্যাটাস (০ ভিজিট)</span>
-        </div>
-
-        <!-- 20 Visits Milestone Stamp Grid -->
-        <div class="card-middle">
-          <div class="stamp-grid" id="cardVisualStampGrid">
-            <div class="stamp-box" id="stamp-1">১</div>
-            <div class="stamp-box" id="stamp-2">২</div>
-            <div class="stamp-box" id="stamp-3">৩</div>
-            <div class="stamp-box" id="stamp-4">৪</div>
-            <div class="stamp-box" id="stamp-5" style="border-color:var(--gold-accent);">★</div>
-            <div class="stamp-box" id="stamp-6">৬</div>
-            <div class="stamp-box" id="stamp-7">৭</div>
-            <div class="stamp-box" id="stamp-8">৮</div>
-            <div class="stamp-box" id="stamp-9">৯</div>
-            <div class="stamp-box" id="stamp-10" style="border-color:var(--gold-accent);">★</div>
-            <div class="stamp-box" id="stamp-11">১১</div>
-            <div class="stamp-box" id="stamp-12">১২</div>
-            <div class="stamp-box" id="stamp-13">১৩</div>
-            <div class="stamp-box" id="stamp-14">১৪</div>
-            <div class="stamp-box" id="stamp-15">১৫</div>
-            <div class="stamp-box" id="stamp-16">১৬</div>
-            <div class="stamp-box" id="stamp-17">১৭</div>
-            <div class="stamp-box" id="stamp-18">১৮</div>
-            <div class="stamp-box" id="stamp-19">১৯</div>
-            <div class="stamp-box" id="stamp-20" style="border-color:#2ecc71;">🎁</div>
+        <!-- Member Identification Row -->
+        <div class="jp-member-info-bar">
+          <div>
+            <div class="jp-member-name-label">MEMBER NAME / সদস্য</div>
+            <div class="jp-member-name-val" id="cardVisualName">...................</div>
           </div>
-          <div class="card-qr-container">
+          <div>
+            <span class="jp-tier-badge" id="cardVisualTier">ব্রোঞ্জ স্ট্যাটাস (০ ভিজিট)</span>
+          </div>
+        </div>
+
+        <!-- Middle Stamp Grid (No Numbers) & QR -->
+        <div class="jp-card-body-grid">
+          <div class="stamp-grid" id="cardVisualStampGrid">
+            <div class="stamp-box"></div>
+            <div class="stamp-box"></div>
+            <div class="stamp-box"></div>
+            <div class="stamp-box"></div>
+            <div class="stamp-box milestone-star" id="stamp-5"></div>
+            <div class="stamp-box"></div>
+            <div class="stamp-box"></div>
+            <div class="stamp-box"></div>
+            <div class="stamp-box"></div>
+            <div class="stamp-box milestone-star" id="stamp-10"></div>
+            <div class="stamp-box"></div>
+            <div class="stamp-box"></div>
+            <div class="stamp-box"></div>
+            <div class="stamp-box"></div>
+            <div class="stamp-box"></div>
+            <div class="stamp-box"></div>
+            <div class="stamp-box"></div>
+            <div class="stamp-box"></div>
+            <div class="stamp-box"></div>
+            <div class="stamp-box milestone-gift" id="stamp-20"></div>
+          </div>
+          <div class="jp-qr-box">
             <div id="qrcode"></div>
           </div>
         </div>
 
-        <div style="display: flex; justify-content: space-between; font-size: 0.65rem; border-top: 1px solid rgba(255,255,255,0.1); pt: 4px;">
-          <span style="color: var(--gold-accent); font-weight: bold;">🎯 ২০ ভিজিট = ফুল মেম্বার বেনিফিট আনলক!</span>
-          <span>📞 01789504376, আম্বরখানা, সিলেট</span>
+        <!-- Card Footer -->
+        <div class="jp-card-footer">
+          <span class="jp-footer-gold">🎯 ২০ ভিজিট = ফুল মেম্বার বেনিফিট আনলক!</span>
+          <span class="jp-footer-loc">📍 আম্বরখানা, সিলেট • 01789504376</span>
         </div>
       </div>
 
@@ -975,13 +1142,15 @@
     }
 
     function updateVisualStamps(activeStamps) {
-      for (let i = 1; i <= 20; i++) {
-        const box = document.getElementById(`stamp-${i}`);
-        if (box) {
-          if (i <= activeStamps) box.classList.add('active');
-          else box.classList.remove('active');
+      const stampBoxes = document.querySelectorAll('#cardVisualStampGrid .stamp-box');
+      stampBoxes.forEach((box, index) => {
+        const i = index + 1;
+        if (i <= activeStamps) {
+          box.classList.add('active');
+        } else {
+          box.classList.remove('active');
         }
-      }
+      });
     }
 
     // POS QR Scanner with Auto-Attachment from Members Sheet
@@ -1190,7 +1359,7 @@
     function updateQRCode(text) {
       const qrDiv = document.getElementById('qrcode');
       qrDiv.innerHTML = "";
-      new QRCode(qrDiv, { text: text, width: 55, height: 55, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
+      new QRCode(qrDiv, { text: text, width: 58, height: 58, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
     }
 
     function updateCardVisual() {
@@ -1206,7 +1375,7 @@
         return;
       }
       const cardElement = document.getElementById('membershipCard');
-      html2canvas(cardElement, { scale: 2, useCORS: true }).then(canvas => {
+      html2canvas(cardElement, { scale: 3, useCORS: true }).then(canvas => {
         const link = document.createElement('a');
         link.download = `Sakura_Card_${document.getElementById('cardIdInput').value}.png`;
         link.href = canvas.toDataURL('image/png');

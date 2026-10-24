@@ -815,9 +815,11 @@
           // 1 Point per 100 BDT
           pointsEarned = amount / 100;
 
-          // Happy Hour Check (12 PM - 4 PM -> double stamps)
-          const currentHour = new Date().getHours();
-          const stampIncrement = (currentHour >= 12 && currentHour < 16) ? 2 : 1;
+          // Happy Hour Check: Sunday only, between 3 PM (15:00) and 4 PM (16:00) -> double stamps (+2)
+          const now = new Date();
+          const currentDay = now.getDay(); // 0 = Sunday
+          const currentHour = now.getHours();
+          const stampIncrement = (currentDay === 0 && currentHour >= 15 && currentHour < 16) ? 2 : 1;
 
           if (amount >= 100) stampsEarned = stampIncrement;
 

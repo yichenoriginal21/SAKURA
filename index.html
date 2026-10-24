@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;600;700;800&family=Noto+Serif+JP:wght@700;900&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
   
-  <!-- Fixed Version Libraries -->
+  <!-- Libraries -->
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -72,7 +72,6 @@
     .input-group input:focus { border-color: var(--pink-primary); }
     .input-row { display: flex; gap: 10px; }
 
-    /* REALTIME AUTO LOOKUP DROPDOWN */
     .search-results-dropdown {
       position: absolute;
       top: 100%;
@@ -120,7 +119,6 @@
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 10000; display: none; justify-content: center; align-items: center; padding: 15px; }
     .receipt-card { background: #ffffff; color: #121212; width: 100%; max-width: 380px; padding: 24px; border-radius: 12px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
 
-    /* VIRTUAL MEMBERSHIP CARD FOR WHATSAPP MODAL */
     .virtual-card-wrapper {
       background: #ffffff;
       color: #0f172a;
@@ -145,7 +143,6 @@
     .vcard-qr-center { display: flex; justify-content: center; margin: 6px 0; }
     .vcard-footer { text-align: center; font-size: 0.75rem; color: #64748b; border-top: 1px dashed #cbd5e1; padding-top: 8px; }
 
-    /* PRINT FRIENDLY WHITE CARD FRAME */
     .card-frame { width: 100%; max-width: 580px; min-height: 360px; background: #ffffff; border: 3px solid #000000; border-radius: 16px; padding: 18px; position: relative; margin: 0 auto; display: flex; flex-direction: column; justify-content: space-between; color: #000000; box-shadow: 0 10px 25px rgba(0,0,0,0.15); overflow: hidden; }
     .card-frame::before { content: "櫻市場会員証"; position: absolute; right: 14px; top: 52%; transform: translateY(-50%); font-size: 85px; font-family: 'Noto Serif JP', serif; font-weight: 900; color: rgba(0, 0, 0, 0.035); writing-mode: vertical-rl; pointer-events: none; letter-spacing: 12px; }
     .jp-card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000000; padding-bottom: 10px; position: relative; z-index: 2; }
@@ -200,14 +197,11 @@
         <div><b>কাস্টমার:</b> <span id="rcptName"></span></div>
         <div><b>কার্ড আইডি:</b> <span id="rcptCard"></span></div>
         <div><b>ফোন:</b> <span id="rcptPhone"></span></div>
-        <div><b>স্ট্যাম্প ও তথ্য:</b> <span id="rcptVisits" style="color: #e11d48; font-weight: bold;"></span></div>
         <hr style="border: 0.5px solid #eee;">
-        <div style="display: flex; justify-content: space-between; font-size: 1.05rem; font-weight: bold;">
-          <span>নেট বিল (ছাড় বাদে):</span>
-          <span style="color: #e11d48;" id="rcptAmount"></span>
-        </div>
-        <div style="display: flex; justify-content: space-between; font-size: 0.92rem;">
-          <span>অর্জিত পয়েন্ট:</span>
+        <div id="rcptBillBreakdown"></div>
+        <div><b>স্ট্যাম্প ও তথ্য:</b> <span id="rcptVisits" style="color: #e11d48; font-weight: bold;"></span></div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.92rem; margin-top: 4px;">
+          <span>অবশিষ্ট পয়েন্ট:</span>
           <span style="color: #16a34a;" id="rcptPoints"></span>
         </div>
       </div>
@@ -358,7 +352,7 @@
 
           <div class="input-row" style="margin-bottom: 10px;">
             <div class="input-group">
-              <label>নেট বিক্রির পরিমাণ (ছাড় বাদ দিয়ে ৳):</label>
+              <label>মোট ক্রয়ের পরিমাণ (৳):</label>
               <input type="number" step="0.01" id="posAmount" placeholder="৳ ০.০০" required>
             </div>
             <div class="input-group">
@@ -374,7 +368,7 @@
             <button type="button" class="btn-preset" onclick="setPreset(100)">৳১০০</button>
             <button type="button" class="btn-preset" onclick="setPreset(500)">৳৫০০</button>
             <button type="button" class="btn-preset" onclick="setPreset(2000)">৳২০০০ (উপহার)</button>
-            <button type="button" class="btn-preset" onclick="setPreset(3000)">৳৩০০০</button>
+            <button type="button" class="btn-preset" onclick="setPreset(5000)">৳৫০০০</button>
           </div>
 
           <button type="submit" id="submitBtn" class="btn">
@@ -513,7 +507,7 @@
 
   <script>
     const TRANSACTIONS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwZOFhqUIQicG-Od68wviQF6Cgx0rJg_62hUl5pbqUT001AfN9XeOOKP2IFTuXBQRbL/exec";
-    const MEMBERS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw-I0nyVAv01vp6joNPzn0k8GY84ftoDk711gzBKkEOWKNdOoFRvr1Us40zZXVTzYnncQ/exec";
+    const MEMBERS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzQr1GPzOad5L14X12NRlqHbcHFaxAzR2L0zBr3EcEKsfRJInOr4i5WDz1KZQIJF1aA0g/exec";
     const CORRECT_PIN = "28282805";
 
     let transactions = [];
@@ -605,19 +599,18 @@
               };
             }
           });
-          document.getElementById('syncStatus').innerText = "🟢 সিস্টেম সুরক্ষিত";
-        }).catch(err => {
-          console.warn("Sync warning:", err);
-          document.getElementById('syncStatus').innerText = "🟡 অফলাইন মোড";
-        });
-
-      fetch(TRANSACTIONS_SCRIPT_URL)
+          return fetch(TRANSACTIONS_SCRIPT_URL);
+        })
         .then(res => res.json())
         .then(data => {
           transactions = data || [];
           renderHistory();
           updateMetrics();
-        }).catch(err => console.warn(err));
+          document.getElementById('syncStatus').innerText = "🟢 সিস্টেম সুরক্ষিত";
+        }).catch(err => {
+          console.warn("Sync warning:", err);
+          document.getElementById('syncStatus').innerText = "🟡 অফলাইন মোড";
+        });
     }
 
     function escapeHTML(str) {
@@ -727,7 +720,7 @@
 
       const existingMember = Object.values(membersDatabase).find(m => m.cardID === cardId || (phone && m.phone === phone));
       if (existingMember) {
-        const overwrite = confirm(`⚠️ এই আইডি (${existingMember.cardID}) অথবা ফোন নম্বর দিয়ে ইতিপূর্বেই মেম্বার "${existingMember.name}" রেজিস্টার্ড রয়েছেন!\n\nআপনি কি তথ্য আপডেট করতে চান? (পুরাতন পয়েন্ট ও স্ট্যাম্প অপরিবর্তিত থাকবে, ফি লাগবে না)`);
+        const overwrite = confirm(`⚠️ এই আইডি (${existingMember.cardID}) অথবা ফোন নম্বর দিয়ে ইতিপূর্বেই মেম্বার "${existingMember.name}" রেজিস্টার্ড রয়েছেন!\n\nআপনি কি তথ্য আপডেট করতে চান?`);
         if (!overwrite) { btn.disabled = false; return; }
 
         existingMember.name = name;
@@ -740,7 +733,7 @@
         return;
       }
 
-      const todayStr = new Date().toISOString().split('T')[0];
+      const todayStr = new Date().toLocaleDateString('en-CA');
       const newMemberObj = { 
         cardID: cardId, 
         name: name, 
@@ -775,7 +768,7 @@
         body: JSON.stringify(regFeeTx)
       }).catch(err => console.error(err));
 
-      alert(`🎉 নতুন মেম্বার সফলভাবে নিবন্ধিত হয়েছে!\n💵 ৳১৫ রেজিস্ট্রেশন ফি আদায় করা হয়েছে এবং সাথে ইনস্ট্যান্ট ২ পয়েন্ট ও ১টি স্ট্যাম্প যুক্ত করা হয়েছে!`);
+      alert(`🎉 নতুন মেম্বার সফলভাবে নিবন্ধিত হয়েছে!\n💵 ৳১৫ ফি আদায় করা হয়েছে এবং ইনস্ট্যান্ট ২ পয়েন্ট ও ১টি স্ট্যাম্প যুক্ত করা হয়েছে!`);
       loadHubMemberDirect(cardId);
       setTimeout(() => { btn.disabled = false; }, 2000);
     }
@@ -935,13 +928,15 @@
 
       const inputName = document.getElementById('posName').value.trim();
       const phone = document.getElementById('posPhone').value.trim();
-      const amount = parseFloat(document.getElementById('posAmount').value) || 0;
+      let inputAmount = parseFloat(document.getElementById('posAmount').value) || 0;
       const txType = document.getElementById('posTxType').value;
       const activeCustomerType = document.getElementById('typeMemberBtn').classList.contains('active') ? 'member' : 'guest';
       
       let cardID = "GUEST";
       let pointsEarned = 0;
       let stampsEarned = 0;
+      let finalBillAmount = inputAmount;
+      let discountApplied = 0;
 
       if (activeCustomerType === 'member') {
         let inputQuery = document.getElementById('posCardID').value.trim().toUpperCase();
@@ -983,59 +978,63 @@
           }
         }
 
-        const todayStr = new Date().toISOString().split('T')[0];
+        const todayStr = new Date().toLocaleDateString('en-CA');
 
         if (txType === 'sale') {
-          pointsEarned = amount / 100;
+          pointsEarned = inputAmount / 100;
 
           const now = new Date();
           const isSunday = now.getDay() === 0;
           const currentHour = now.getHours();
           const stampValue = (isSunday && currentHour >= 15 && currentHour < 16) ? 2 : 1;
 
-          if (amount >= 100) {
+          if (inputAmount >= 100) {
             if (currentMember.lastStampDate === todayStr) {
-              stampsEarned = 0; // আজকের দিনে অলরেডি স্ট্যাম্প পেয়ে গেছে, নতুন করে আর পাবে না
+              stampsEarned = 0; 
             } else {
               stampsEarned = stampValue;
-              currentMember.lastStampDate = todayStr; // আজকের তারিখ আপডেট হলো
+              currentMember.lastStampDate = todayStr;
             }
           }
 
-          // স্ট্যাম্প রিসেট না করে পূর্বের স্ট্যাম্পের সাথে নতুন স্ট্যাম্প নিখুঁতভাবে যোগ করা হলো
           currentMember.stamps = parseInt(currentMember.stamps || 0) + stampsEarned;
           currentMember.points = parseFloat(currentMember.points || 0) + pointsEarned;
 
-          if (amount >= 2000) {
+          if (inputAmount >= 2000) {
             alert("🎁 বিশেষ ধামাকা! ৳২০০০ বা তার বেশি কেনাকাটায় বিশেষ উপহার প্রস্তুত!");
             logGiftRecord(cardID, inputName, phone, "৳২০০০+ কেনাকাটায় উপহার ক্লাইম");
           }
 
           if (currentMember.stamps >= 20) {
-            currentMember.stamps = currentMember.stamps - 20; 
+            alert(`🎉 অভিনন্দন! ${currentMember.name}-এর ২০টি স্ট্যাম্প সফলভাবে পূর্ণ হয়েছে!\n\n🎁 কাস্টমার পাচ্ছেন ৳৫০ মূল্যের ফ্রি উপহার এবং স্ট্যাটাস 'সাকুরা গোল্ড মেম্বার' হলো!\n\n💡 পরবর্তী ভিজিট বা কেনাকাটায় স্ট্যাম্প কাউন্টার স্বয়ংক্রিয়ভাবে ০ (শূন্য) থেকে আবার নতুন চক্র শুরু করবে।`);
             currentMember.status = "সাকুরা গোল্ড মেম্বার";
-            alert("🎉 অভিনন্দন! ২০ স্ট্যাম্প পূর্ণ হয়েছে! কাস্টমার পাচ্ছেন ৳৫০ মূল্যের ফ্রি উপহার এবং স্ট্যাটাস 'সাকুরা গোল্ড মেম্বার' হলো!");
             logGiftRecord(cardID, inputName, phone, "২০ স্ট্যাম্প পূরণে ৳৫০ ফ্রি উপহার ক্লাইম");
+            currentMember.stamps = 0; 
           }
 
           membersDatabase[cardID] = currentMember;
           saveMemberToBackend(currentMember); 
 
         } else if (txType === 'redeem') {
-          if (currentMember.points < 50) {
+          if ((currentMember.points || 0) < 50) {
             alert("⚠️ রিডিম ব্যর্থ! পয়েন্ট দিয়ে ছাড় পাওয়ার জন্য কমপক্ষে ৫০ পয়েন্ট থাকতে হবে।");
             submitBtn.disabled = false;
             return;
           }
 
-          if (amount < 50) {
+          if (inputAmount < 50) {
             alert("⚠️ প্রফিট প্রোটেকশন ব্লক: ডিসকাউন্ট নেওয়ার জন্য নেট বিল অন্তত ৳৫০ হতে হবে।");
             submitBtn.disabled = false;
             return;
           }
 
-          pointsEarned = -50;
-          currentMember.points -= 50;
+          discountApplied = 50.00;
+          finalBillAmount = inputAmount - discountApplied; 
+          pointsEarned = -50.00; 
+          stampsEarned = 0; 
+
+          currentMember.points = parseFloat(currentMember.points || 0) - 50;
+          
           membersDatabase[cardID] = currentMember;
           saveMemberToBackend(currentMember);
         }
@@ -1049,10 +1048,12 @@
         name: inputName,
         phone: phone,
         txType: txType,
-        amount: amount,
+        amount: finalBillAmount, 
+        originalAmount: inputAmount,
+        discount: discountApplied,
         points: pointsEarned,
         visits: stampsEarned,
-        note: txType === 'redeem' ? 'পয়েন্ট ডিসকাউন্ট (রিডিম)' : (txType === 'sale' ? 'সাধারণ কেনাকাটা' : 'অন্যান্য')
+        note: txType === 'redeem' ? 'পয়েন্ট ডিসকাউন্ট (রিডিম -৳৫০)' : 'সাধারণ কেনাকাটা'
       };
 
       lastReceiptData = newTx;
@@ -1081,9 +1082,35 @@
       document.getElementById('rcptName').innerText = tx.name;
       document.getElementById('rcptCard').innerText = tx.cardID;
       document.getElementById('rcptPhone').innerText = tx.phone || 'নেই';
-      document.getElementById('rcptVisits').innerText = tx.visits ? `+${tx.visits} স্ট্যাম্প যুক্ত হয়েছে` : (tx.note || 'স্ট্যাম্প প্রযোজ্য নয়');
-      document.getElementById('rcptAmount').innerText = `৳ ${parseFloat(tx.amount || 0).toFixed(2)}`;
-      document.getElementById('rcptPoints').innerText = `${parseFloat(tx.points || 0) >= 0 ? '+' : ''}${parseFloat(tx.points || 0).toFixed(2)} পয়েন্ট`;
+      document.getElementById('rcptVisits').innerText = tx.visits ? `+${tx.visits} স্ট্যাম্প যুক্ত হয়েছে` : (tx.txType === 'redeem' ? 'পয়েন্ট রিডিম (স্ট্যাম্প অপরিবর্তিত)' : 'স্ট্যাম্প প্রযোজ্য নয়');
+      
+      const breakdownDiv = document.getElementById('rcptBillBreakdown');
+      if (tx.txType === 'redeem') {
+        breakdownDiv.innerHTML = `
+          <div style="display: flex; justify-content: space-between; font-size: 0.95rem;">
+            <span>মূল কেনাকাটা:</span>
+            <span>৳ ${parseFloat(tx.originalAmount || tx.amount).toFixed(2)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.95rem; color: #e11d48;">
+            <span>পয়েন্ট ডিসকাউন্ট (রিডিম):</span>
+            <span>- ৳ ${parseFloat(tx.discount || 50).toFixed(2)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 1.1rem; font-weight: bold; margin-top: 4px; border-top: 1px dashed #ccc; padding-top: 4px;">
+            <span>পরিশেধ্য মোট বিল:</span>
+            <span style="color: #16a34a;">৳ ${parseFloat(tx.amount).toFixed(2)}</span>
+          </div>
+        `;
+      } else {
+        breakdownDiv.innerHTML = `
+          <div style="display: flex; justify-content: space-between; font-size: 1.1rem; font-weight: bold;">
+            <span>নেট বিল:</span>
+            <span style="color: #e11d48;">৳ ${parseFloat(tx.amount).toFixed(2)}</span>
+          </div>
+        `;
+      }
+
+      let currentMember = membersDatabase[tx.cardID] || { points: 0 };
+      document.getElementById('rcptPoints').innerText = `${parseFloat(currentMember.points || 0).toFixed(2)} পয়েন্ট`;
       
       const waBtn = document.getElementById('whatsappReceiptBtn');
       waBtn.onclick = () => sendWhatsAppDirect(tx);
@@ -1108,16 +1135,21 @@
       if (rawPhone.length === 11 && rawPhone.startsWith('01')) formattedPhone = '88' + rawPhone;
 
       let currentMember = membersDatabase[t.cardID] || { points: 0 };
-      let remainingPoints = Math.max(0, 50 - (parseFloat(currentMember.points) || 0));
+
+      let billText = `💰 নেট বিল: ৳${parseFloat(t.amount || 0).toFixed(2)}`;
+      if (t.txType === 'redeem') {
+        billText = `📦 মূল কেনাকাটা: ৳${parseFloat(t.originalAmount || t.amount).toFixed(2)}\n` +
+                   `🎁 পয়েন্ট ডিসকাউন্ট: -৳50.00\n` +
+                   `💵 পরিশোধিত মোট বিল: ৳${parseFloat(t.amount || 0).toFixed(2)}`;
+      }
 
       const msg = `🌸 *সাকুরা মার্কেট (আম্বরখানা, সিলেট)* 🌸\n` +
                   `📦 ডিজিটাল ই-রসিদ ও মেম্বারশিপ আপডেট\n\n` +
                   `👤 নাম: ${t.name}\n` +
                   `🆔 কার্ড: ${t.cardID}\n` +
-                  `💰 নেট বিল: ৳${parseFloat(t.amount || 0).toFixed(2)}\n` +
-                  `⭐ অর্জিত পয়েন্ট: ${parseFloat(t.points || 0) >= 0 ? '+' : ''}${parseFloat(t.points || 0).toFixed(2)}\n` +
+                  `${billText}\n` +
+                  `⭐ বর্তমান জমা পয়েন্ট: ${parseFloat(currentMember.points || 0).toFixed(2)}\n` +
                   `🕒 সময়: ${t.timestamp}\n\n` +
-                  `💡 ৫০ পয়েন্ট জমলেই সরাসরি ৳৫০ ছাড়! (আর মাত্র ${remainingPoints.toFixed(2)} পয়েন্ট বাকি)\n\n` +
                   `ধন্যবাদ আমাদের সাথে থাকার জন্য!`;
 
       const whatsappURL = formattedPhone ? `https://wa.me/${formattedPhone}?text=${encodeURIComponent(msg)}` : `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
@@ -1221,8 +1253,6 @@
 
     function updateMetrics() {
       const totalIncome = transactions.reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
-      
-      // মোট ইস্যুকৃত পয়েন্টের সঠিক হিসাব (প্লাস পয়েন্টগুলোর যোগফল)
       const totalIssuedPoints = transactions.reduce((sum, t) => {
         let pts = parseFloat(t.points || 0);
         return pts > 0 ? sum + pts : sum;

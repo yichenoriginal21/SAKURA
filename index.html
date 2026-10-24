@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sakura Market - Complete POS, Membership Hub & Virtual Card System</title>
+  <title>Sakura Market - POS & Membership System</title>
   
-  <!-- FontAwesome & Standard Bengali Google Fonts (Hind Siliguri + Noto Sans Bengali) -->
+  <!-- FontAwesome & Standard Bengali Google Fonts -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;600;700;800&family=Noto+Serif+JP:wght@700;900&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
   
-  <!-- Libraries for QR Scanner, QRCode & HTML Canvas -->
-  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <!-- Fixed Version Libraries -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
@@ -33,7 +33,7 @@
     body { background-color: var(--bg-main); color: var(--text-light); padding: 15px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
 
     /* LOCK SCREEN */
-    #lockScreen { position: fixed; inset: 0; background: rgba(11, 15, 25, 0.96); z-index: 9999; display: flex; justify-content: center; align-items: center; padding: 20px; }
+    #lockScreen { position: fixed; inset: 0; background: rgba(11, 15, 25, 0.98); z-index: 9999; display: flex; justify-content: center; align-items: center; padding: 20px; }
     .lock-box { background: var(--bg-card); border: 2px solid var(--pink-primary); padding: 30px; border-radius: 16px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 10px 30px rgba(225, 29, 72, 0.3); display: flex; flex-direction: column; gap: 15px; }
     .lock-box h2 { color: var(--gold-accent); font-size: 1.3rem; }
     .lock-box input { background: #0f172a; border: 1px solid var(--border-color); padding: 12px; border-radius: 8px; color: #fff; font-size: 1.1rem; text-align: center; outline: none; }
@@ -100,10 +100,10 @@
 
     .btn { background: var(--pink-primary); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.2s; }
     .btn:hover { opacity: 0.9; }
+    .btn:disabled { background: #475569; cursor: not-allowed; opacity: 0.6; }
     .btn-scanner { background: #1d4ed8; border: 1px solid #3b82f6; }
     .btn-green { background: #1b4d3e; border: 1px solid #2ecc71; }
     .btn-whatsapp { background: #25d366; color: #000; font-weight: 800; }
-    .btn-danger { background: #dc2626; color: #fff; padding: 4px 8px; font-size: 0.75rem; border-radius: 4px; }
     .btn-preset { background: #1e293b; border: 1px solid var(--border-color); color: #fff; padding: 6px; border-radius: 6px; font-size: 0.82rem; cursor: pointer; flex: 1; font-weight: 600; }
 
     #reader, #hubReader { width: 100%; border-radius: 8px; overflow: hidden; display: none; margin-top: 10px; }
@@ -135,13 +135,7 @@
       position: relative;
       box-shadow: 0 15px 35px rgba(0,0,0,0.5);
     }
-    .vcard-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 2px solid #000;
-      padding-bottom: 8px;
-    }
+    .vcard-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 8px; }
     .vcard-brand { display: flex; align-items: center; gap: 8px; }
     .vcard-hanko { background: #000; color: #fff; width: 34px; height: 34px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-family: 'Noto Serif JP', serif; }
     .vcard-title { font-size: 1.15rem; font-weight: 800; color: #000; }
@@ -172,8 +166,8 @@
     .stamp-box.milestone-gift::after { content: "🎁"; font-size: 0.75rem; }
     .stamp-box.active { background: #000000; color: #ffffff; border: 2px solid #000000; font-weight: 900; }
     .stamp-box.active::after { content: "🌸"; font-size: 0.75rem; }
-    .jp-qr-box { background: #ffffff; padding: 4px; border-radius: 8px; display: flex; align-items: center; justify-content: center; width: 72px; height: 72px; border: 2px solid #000000; }
-    #qrcode img, #virtualQrcode img { width: 58px !important; height: 58px !important; }
+    .jp-qr-box { background: #ffffff; padding: 4px; border-radius: 8px; display: flex; align-items: center; justify-content: center; width: 75px; height: 75px; border: 2px solid #000000; }
+    #qrcode img, #virtualQrcode img { width: 64px !important; height: 64px !important; }
     .jp-card-footer { display: flex; justify-content: space-between; align-items: center; font-size: 0.72rem; border-top: 1.5px solid #d4d4d4; padding-top: 8px; position: relative; z-index: 2; }
     .jp-footer-gold { color: #000000; font-weight: bold; letter-spacing: 0.5px; }
     .jp-footer-loc { color: #525252; }
@@ -209,7 +203,7 @@
         <div><b>স্ট্যাম্প ও তথ্য:</b> <span id="rcptVisits" style="color: #e11d48; font-weight: bold;"></span></div>
         <hr style="border: 0.5px solid #eee;">
         <div style="display: flex; justify-content: space-between; font-size: 1.05rem; font-weight: bold;">
-          <span>মোট বিল:</span>
+          <span>নেট বিল (ছাড় বাদে):</span>
           <span style="color: #e11d48;" id="rcptAmount"></span>
         </div>
         <div style="display: flex; justify-content: space-between; font-size: 0.92rem;">
@@ -218,12 +212,12 @@
         </div>
       </div>
       <div style="text-align: center; font-size: 0.75rem; color: #888; border-top: 1px dashed #ddd; padding-top: 8px;">
-        সাকুরা মার্কেট মেম্বারশিপ সার্ভিস ব্যবহারের জন্য ধন্যবাদ!
+        সাকুরা মার্কেট লয়্যালটি সার্ভিস • ধন্যবাদ!
       </div>
     </div>
 
     <div style="display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 380px; margin-top: 10px;">
-      <button class="btn btn-whatsapp" onclick="sendWhatsAppReceiptModal()">
+      <button class="btn btn-whatsapp" id="whatsappReceiptBtn">
         <i class="fa-brands fa-whatsapp"></i> হোয়াটসঅ্যাপে রসিদ পাঠান
       </button>
       <button class="btn btn-green" onclick="downloadReceiptPNG()">
@@ -275,13 +269,13 @@
       </div>
 
       <div class="vcard-footer">
-        📌 কেনাকাটার সময় এই ডিজিটাল কিউআর কোডটি দোকানে প্রদর্শন করুন।<br>
-        📍 আম্বরখানা, সিলেট • 📞 01789504376
+        📌 কেনাকাটার সময় নাম ও আইডি মিলিয়ে সুবিধা গ্রহণ করুন।<br>
+        📍 শাহীন স্কুলের পাশে, আম্বরখানা, সিলেট • 📞 01789504376
       </div>
     </div>
 
     <div style="display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 420px; margin-top: 12px;">
-      <button class="btn btn-whatsapp" onclick="sendVirtualCardViaWhatsApp()">
+      <button class="btn btn-whatsapp" id="whatsappVirtualCardBtn">
         <i class="fa-brands fa-whatsapp"></i> হোয়াটসঅ্যাপে ডিজিটাল কার্ড শেয়ার করুন
       </button>
       <button class="btn btn-green" onclick="downloadVirtualCardPNG()">
@@ -298,11 +292,11 @@
         <div class="logo-seal">咲</div>
         <div class="shop-title">
           <h1>সাকুরা মার্কেট (Sakura Market)</h1>
-          <p>আম্বরখানা, সিলেট • EST. 2026</p>
+          <p>শাহীন স্কুলের পাশে, আম্বরখানা, সিলেট • EST. 2026</p>
         </div>
       </div>
       <div style="display: flex; align-items: center; gap: 10px;">
-        <span style="font-size: 0.85rem; color: var(--green-status);" id="syncStatus">🟢 গুগল শিট সিঙ্কড</span>
+        <span style="font-size: 0.85rem; color: var(--green-status);" id="syncStatus">🟢 সিস্টেম প্রস্তুত</span>
         <button style="background: rgba(225,29,72,0.2); border: 1px solid var(--pink-primary); color: #fff; padding: 4px 8px; border-radius: 6px; font-size: 0.78rem; cursor: pointer;" onclick="logout()">🔒 লগআউট</button>
       </div>
     </div>
@@ -344,8 +338,8 @@
           <div id="memberInputsGroup">
             <div class="input-row" style="margin-bottom: 10px;">
               <div class="input-group">
-                <label>ফোন নম্বর / মেম্বার আইডি দিয়ে খুঁজুন (Auto Search):</label>
-                <input type="text" id="posCardID" placeholder="ফোন নম্বর বা SKR-আইডি লিখুন..." autocomplete="off" oninput="handlePosSearchInput(this.value)">
+                <label>মেম্বার আইডি বা ফোন নম্বর (অটো-রিজলভ সাপোর্ট):</label>
+                <input type="text" id="posCardID" placeholder="SKR-আইডি বা ১১ ডিজিট ফোন নম্বর লিখুন..." autocomplete="off">
                 <div class="search-results-dropdown" id="posDropdown"></div>
               </div>
             </div>
@@ -353,7 +347,7 @@
 
           <div class="input-row" style="margin-bottom: 10px;">
             <div class="input-group">
-              <label>কাস্টমারের নাম:</label>
+              <label>কাস্টমারের নাম (যাচাইকরণের জন্য):</label>
               <input type="text" id="posName" placeholder="নাম লিখুন..." required>
             </div>
             <div class="input-group">
@@ -364,14 +358,14 @@
 
           <div class="input-row" style="margin-bottom: 10px;">
             <div class="input-group">
-              <label>বিক্রির পরিমাণ (টাকা ৳):</label>
+              <label>নেট বিক্রির পরিমাণ (ছাড় বাদ দিয়ে ৳):</label>
               <input type="number" step="0.01" id="posAmount" placeholder="৳ ০.০০" required>
             </div>
             <div class="input-group">
               <label>লেনদেনের ধরন:</label>
               <select id="posTxType">
-                <option value="sale">সাধারণ কেনাকাটা (৳১০০ = ১ পয়েন্ট, ৳১০০+ = ১ স্ট্যাম্প)</option>
-                <option value="redeem">পয়েন্ট ডিসকাউন্ট/রিডিম (ন্যূনতম ৫০ পয়েন্ট = ৳৫০)</option>
+                <option value="sale">সাধারণ কেনাকাটা (৳১০০ = ১ পয়েন্ট, দিনে সর্বোচ্চ ১ স্ট্যাম্প)</option>
+                <option value="redeem">পয়েন্ট ডিসকাউন্ট/রিডিম (৫০ পয়েন্ট = ৳৫০ ছাড়)</option>
               </select>
             </div>
           </div>
@@ -383,7 +377,7 @@
             <button type="button" class="btn-preset" onclick="setPreset(3000)">৳৩০০০</button>
           </div>
 
-          <button type="submit" class="btn">
+          <button type="submit" id="submitBtn" class="btn">
             <i class="fa-solid fa-check-circle"></i> লেনদেন সেভ ও পয়েন্ট আপডেট করুন
           </button>
         </form>
@@ -397,8 +391,8 @@
               <tr>
                 <th>সময়</th>
                 <th>নাম ও আইডি</th>
-                <th>টাইপ</th>
-                <th>টাকা</th>
+                <th>টাইপ/নোট</th>
+                <th>নেট বিল</th>
                 <th>পয়েন্ট ও স্ট্যাম্প</th>
                 <th>অ্যাকশন</th>
               </tr>
@@ -424,7 +418,7 @@
         <div class="input-row" style="margin-top: 10px;">
           <div class="input-group">
             <label>ফোন নম্বর / মেম্বার আইডি / নাম দিয়ে সদস্য খুঁজুন:</label>
-            <input type="text" id="hubCardId" placeholder="যেমন: 01711... বা SKR-954443" autocomplete="off" oninput="handleHubSearchInput(this.value)">
+            <input type="text" id="hubCardId" placeholder="যেমন: 01711... বা SKR-954443" autocomplete="off">
             <div class="search-results-dropdown" id="hubDropdown"></div>
           </div>
         </div>
@@ -432,14 +426,14 @@
         <div id="hubDetailsBox" style="background: #0f172a; padding: 14px; border-radius: 8px; font-size: 0.92rem; display: none; margin-top: 5px; line-height: 1.6;"></div>
 
         <div id="hubActionRow" style="display: none; margin-top: 8px;">
-          <button class="btn btn-whatsapp" onclick="openVirtualCardForCurrentHubMember()">
+          <button class="btn btn-whatsapp" id="hubWhatsAppCardBtn">
             <i class="fa-brands fa-whatsapp"></i> এই মেম্বারকে ডিজিটাল কার্ড বানিয়ে হোয়াটসঅ্যাপে পাঠান
           </button>
         </div>
       </div>
 
       <div class="panel">
-        <div class="panel-title"><i class="fa-solid fa-id-card"></i> নতুন মেম্বার রেজিস্ট্রেশন (<span style="color: var(--gold-accent);">সীমিত অফার! রেগুলার ৳৮৯</span>)</div>
+        <div class="panel-title"><i class="fa-solid fa-id-card"></i> নতুন মেম্বার রেজিস্ট্রেশন (ফি: ৳১৫)</div>
         
         <div class="input-row">
           <div class="input-group" style="flex: 2;">
@@ -458,12 +452,12 @@
         <div class="input-row">
           <div class="input-group">
             <label>হোয়াটসঅ্যাপ নম্বর:</label>
-            <input type="text" id="cardPhoneInput" placeholder="017xxxxxxxx">
+            <input type="text" id="cardPhoneInput" placeholder="017xxxxxxxx" oninput="updateCardVisual()">
           </div>
         </div>
 
-        <button class="btn btn-green" onclick="issueNewMemberCard()">
-          <i class="fa-solid fa-gift"></i> নতুন মেম্বার রেজিস্টার করুন (ফি: ৳১৫)
+        <button class="btn btn-green" id="regSubmitBtn" onclick="issueNewMemberCard()">
+          <i class="fa-solid fa-gift"></i> নতুন মেম্বার রেজিস্টার করুন (ফি: ৳১৫ আদায় করুন)
         </button>
         <button class="btn btn-green" style="background: #1d4ed8; border-color: #3b82f6;" onclick="downloadCardPNG()">
           <i class="fa-solid fa-download"></i> ফিজিক্যাল মেম্বারশিপ কার্ড PNG ডাউনলোড
@@ -489,7 +483,7 @@
             <div class="jp-member-name-val" id="cardVisualName">...................</div>
           </div>
           <div>
-            <span class="jp-tier-badge" id="cardVisualTier">রেগুলার মেম্বার</span>
+            <span class="jp-tier-badge" id="cardVisualTier">সাকুরা মেম্বার</span>
           </div>
         </div>
 
@@ -510,8 +504,8 @@
         </div>
 
         <div class="jp-card-footer">
-          <span class="jp-footer-gold">🎯 ২০ স্ট্যাম্প = ফ্রি মিনি তেল ও রিওয়ার্ড!</span>
-          <span class="jp-footer-loc">📍 আম্বরখানা, সিলেট • 01789504376</span>
+          <span class="jp-footer-gold">🎯 ২০ স্ট্যাম্প = ৳৫০ মূল্যের ফ্রি উপহার!</span>
+          <span class="jp-footer-loc">📍 শাহীন স্কুলের পাশে, আম্বরখানা, সিলেট • 01789504376</span>
         </div>
       </div>
     </div>
@@ -530,12 +524,13 @@
     let currentSelectedMemberID = null;
 
     window.onload = function() {
-      if (localStorage.getItem('sakura_pin_auth') === CORRECT_PIN) unlockApp();
+      if (sessionStorage.getItem('sakura_pin_auth') === CORRECT_PIN) unlockApp();
     };
 
     function verifyPin() {
-      if (document.getElementById('pinInput').value.trim() === CORRECT_PIN) {
-        localStorage.setItem('sakura_pin_auth', CORRECT_PIN);
+      const pinVal = document.getElementById('pinInput').value.trim();
+      if (pinVal === CORRECT_PIN) {
+        sessionStorage.setItem('sakura_pin_auth', CORRECT_PIN);
         unlockApp();
       } else {
         document.getElementById('pinError').style.display = 'block';
@@ -548,10 +543,11 @@
       document.getElementById('appWrapper').style.display = 'flex';
       fetchAllData();
       generateNewCardID();
+      setupEventListeners();
     }
 
     function logout() {
-      localStorage.removeItem('sakura_pin_auth');
+      sessionStorage.removeItem('sakura_pin_auth');
       location.reload();
     }
 
@@ -569,17 +565,20 @@
       const guestBtn = document.getElementById('typeGuestBtn');
       const memberInputs = document.getElementById('memberInputsGroup');
       const scanBtn = document.getElementById('scanCameraBtn');
+      const cardIdField = document.getElementById('posCardID');
 
       if (type === 'member') {
         memberBtn.classList.add('active');
         guestBtn.classList.remove('active');
         memberInputs.style.display = 'block';
         scanBtn.style.display = 'block';
+        cardIdField.setAttribute('required', 'true');
       } else {
         guestBtn.classList.add('active');
         memberBtn.classList.remove('active');
         memberInputs.style.display = 'none';
         scanBtn.style.display = 'none';
+        cardIdField.removeAttribute('required');
         if (html5QrCode) stopScanner();
       }
     }
@@ -587,6 +586,7 @@
     function setPreset(amt) { document.getElementById('posAmount').value = amt; }
 
     function fetchAllData() {
+      document.getElementById('syncStatus').innerText = "🔄 সিঙ্ক হচ্ছে...";
       fetch(MEMBERS_SCRIPT_URL)
         .then(res => res.json())
         .then(data => {
@@ -598,14 +598,18 @@
                 cardID: cardId,
                 name: m.name || m.Name || "",
                 phone: (m.phone || m.Phone || "").toString().trim(),
-                stamps: parseInt(m.stamps || m.visits || 1),
-                points: parseFloat(m.points || m.Points || 2.00),
-                status: m.status || "সাকুরা মেম্বার"
+                stamps: parseInt(m.stamps !== undefined && m.stamps !== "" ? m.stamps : 0),
+                points: parseFloat(m.points !== undefined && m.points !== "" ? m.points : 0.00),
+                status: m.status || "সাকুরা মেম্বার",
+                lastStampDate: m.lastStampDate || ""
               };
             }
           });
-          document.getElementById('syncStatus').innerText = "🟢 গুগল শিট সিঙ্কড";
-        }).catch(err => console.warn(err));
+          document.getElementById('syncStatus').innerText = "🟢 সিস্টেম সুরক্ষিত";
+        }).catch(err => {
+          console.warn("Sync warning:", err);
+          document.getElementById('syncStatus').innerText = "🟡 অফলাইন মোড";
+        });
 
       fetch(TRANSACTIONS_SCRIPT_URL)
         .then(res => res.json())
@@ -616,7 +620,24 @@
         }).catch(err => console.warn(err));
     }
 
-    /* REALTIME AUTO-LOOKUP / AUTO-SEARCH IMPLEMENTATION */
+    function escapeHTML(str) {
+      return str ? String(str).replace(/[&<>'"]/g, 
+        tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+      ) : '';
+    }
+
+    function setupEventListeners() {
+      document.getElementById('posCardID').addEventListener('input', function() {
+        handlePosSearchInput(this.value);
+      });
+      document.getElementById('hubCardId').addEventListener('input', function() {
+        handleHubSearchInput(this.value);
+      });
+      document.getElementById('hubWhatsAppCardBtn').addEventListener('click', function() {
+        openVirtualCardForCurrentHubMember();
+      });
+    }
+
     function handlePosSearchInput(query) {
       const dropdown = document.getElementById('posDropdown');
       const q = query.trim().toLowerCase();
@@ -633,12 +654,16 @@
         return;
       }
 
-      dropdown.innerHTML = matches.slice(0, 6).map(m => `
-        <div class="search-item" onclick="selectPosMember('${m.cardID}')">
-          <div><strong>${m.name}</strong> <small>(${m.phone || 'ফোন নেই'})</small></div>
-          <span style="color: var(--gold-accent); font-weight: bold;">${m.cardID}</span>
-        </div>
-      `).join('');
+      dropdown.innerHTML = "";
+      matches.slice(0, 6).forEach(m => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'search-item';
+        itemDiv.innerHTML = `<div><strong>${escapeHTML(m.name)}</strong> <small>(${escapeHTML(m.phone || 'ফোন নেই')})</small></div> <span style="color: var(--gold-accent); font-weight: bold;">${escapeHTML(m.cardID)}</span>`;
+        itemDiv.addEventListener('click', () => {
+          selectPosMember(m.cardID);
+        });
+        dropdown.appendChild(itemDiv);
+      });
       dropdown.style.display = 'block';
     }
 
@@ -648,6 +673,8 @@
         document.getElementById('posCardID').value = m.cardID;
         document.getElementById('posName').value = m.name;
         document.getElementById('posPhone').value = m.phone;
+      } else {
+        alert("⚠️ নির্বাচিত মেম্বারটি সিস্টেম ডেটাবেসে পাওয়া যায়নি!");
       }
       document.getElementById('posDropdown').style.display = 'none';
     }
@@ -668,12 +695,16 @@
         return;
       }
 
-      dropdown.innerHTML = matches.slice(0, 6).map(m => `
-        <div class="search-item" onclick="selectHubMember('${m.cardID}')">
-          <div><strong>${m.name}</strong> <small>(${m.phone || 'ফোন নেই'})</small></div>
-          <span style="color: var(--gold-accent); font-weight: bold;">${m.cardID}</span>
-        </div>
-      `).join('');
+      dropdown.innerHTML = "";
+      matches.slice(0, 6).forEach(m => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'search-item';
+        itemDiv.innerHTML = `<div><strong>${escapeHTML(m.name)}</strong> <small>(${escapeHTML(m.phone || 'ফোন নেই')})</small></div> <span style="color: var(--gold-accent); font-weight: bold;">${escapeHTML(m.cardID)}</span>`;
+        itemDiv.addEventListener('click', () => {
+          selectHubMember(m.cardID);
+        });
+        dropdown.appendChild(itemDiv);
+      });
       dropdown.style.display = 'block';
     }
 
@@ -684,22 +715,71 @@
     }
 
     function issueNewMemberCard() {
+      const btn = document.getElementById('regSubmitBtn');
+      btn.disabled = true;
+
       const name = document.getElementById('cardNameInput').value.trim();
       const cardId = document.getElementById('cardIdInput').value.trim().toUpperCase();
       const phone = document.getElementById('cardPhoneInput').value.trim();
 
-      if (!name) { alert("⚠️ সদস্যের নাম লিখুন।"); return; }
+      if (!name) { alert("⚠️ সদস্যের নাম লিখুন।"); btn.disabled = false; return; }
+      if (!cardId || cardId === "GUEST") { alert("⚠️ সঠিক কার্ড আইডি দিন।"); btn.disabled = false; return; }
 
-      const newMemberObj = { cardID: cardId, name: name, phone: phone, stamps: 1, points: 2.00, status: "সাকুরা মেম্বার" };
+      const existingMember = Object.values(membersDatabase).find(m => m.cardID === cardId || (phone && m.phone === phone));
+      if (existingMember) {
+        const overwrite = confirm(`⚠️ এই আইডি (${existingMember.cardID}) অথবা ফোন নম্বর দিয়ে ইতিপূর্বেই মেম্বার "${existingMember.name}" রেজিস্টার্ড রয়েছেন!\n\nআপনি কি তথ্য আপডেট করতে চান? (পুরাতন পয়েন্ট ও স্ট্যাম্প অপরিবর্তিত থাকবে, ফি লাগবে না)`);
+        if (!overwrite) { btn.disabled = false; return; }
+
+        existingMember.name = name;
+        if (phone) existingMember.phone = phone;
+        membersDatabase[existingMember.cardID] = existingMember;
+        saveMemberToBackend(existingMember);
+        alert(`✅ মেম্বার তথ্য সফলভাবে আপডেট করা হয়েছে।`);
+        loadHubMemberDirect(existingMember.cardID);
+        btn.disabled = false;
+        return;
+      }
+
+      const todayStr = new Date().toISOString().split('T')[0];
+      const newMemberObj = { 
+        cardID: cardId, 
+        name: name, 
+        phone: phone, 
+        stamps: 1, 
+        points: 2.00, 
+        status: "সাকুরা মেম্বার",
+        lastStampDate: todayStr
+      };
       membersDatabase[cardId] = newMemberObj;
-
       saveMemberToBackend(newMemberObj);
 
-      alert(`🎉 নতুন মেম্বার সফলভাবে নিবন্ধিত হয়েছে!\n🎁 ১ স্ট্যাম্প ও ২ পয়েন্ট উপহার দেওয়া হলো।`);
+      const regFeeTx = {
+        id: String(Date.now()),
+        timestamp: new Date().toLocaleString('bn-BD'),
+        type: 'member',
+        cardID: cardId,
+        name: name,
+        phone: phone,
+        txType: 'registration_fee',
+        amount: 15.00,
+        points: 0,
+        visits: 0,
+        note: 'নতুন মেম্বার রেজিস্ট্রেশন ফি (৳১৫)'
+      };
+      transactions.unshift(regFeeTx);
+      renderHistory();
+      updateMetrics();
+
+      fetch(TRANSACTIONS_SCRIPT_URL, {
+        method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(regFeeTx)
+      }).catch(err => console.error(err));
+
+      alert(`🎉 নতুন মেম্বার সফলভাবে নিবন্ধিত হয়েছে!\n💵 ৳১৫ রেজিস্ট্রেশন ফি ক্যাশ হিসাবে সংগ্রহ করুন এবং সিস্টেমে যুক্ত করা হলো।`);
       loadHubMemberDirect(cardId);
+      setTimeout(() => { btn.disabled = false; }, 2000);
     }
 
-    /* BACKEND GOOGLE SHEETS SYNC FOR MEMBER UPDATES (STAMP RESET & POINTS) */
     function saveMemberToBackend(memberObj) {
       fetch(MEMBERS_SCRIPT_URL, {
         method: 'POST',
@@ -723,9 +803,15 @@
         hubQrCode = new Html5Qrcode("hubReader");
         hubQrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 200, height: 200 } },
           decodedText => {
-            document.getElementById('hubCardId').value = decodedText.trim().toUpperCase();
+            let rawText = decodedText.trim();
+            let parsedId = rawText.split('|')[0].trim().toUpperCase();
+            if (membersDatabase[parsedId]) {
+              document.getElementById('hubCardId').value = parsedId;
+              loadHubMember();
+            } else {
+              alert(`⚠️ স্ক্যান করা কার্ড আইডি (${parsedId}) ডেটাবেসে পাওয়া যায়নি!`);
+            }
             if (hubQrCode) hubQrCode.stop().then(() => readerDiv.style.display = 'none');
-            loadHubMember();
           }, err => {}
         ).catch(err => { alert("ক্যামেরা অন করা যায়নি।"); readerDiv.style.display = 'none'; });
       }
@@ -745,11 +831,11 @@
 
         box.innerHTML = `
           ✅ <b>মেম্বার প্রোফাইল লোড হয়েছে!</b><br>
-          🆔 আইডি: <b>${cardId}</b> | নাম: <b>${m.name}</b><br>
-          📞 ফোন: <b>${m.phone || 'নেই'}</b><br>
+          🆔 আইডি: <b>${escapeHTML(cardId)}</b> | নাম: <b>${escapeHTML(m.name)}</b><br>
+          📞 ফোন: <b>${escapeHTML(m.phone || 'নেই')}</b><br>
           ⭐ মোট পয়েন্ট: <b>${parseFloat(m.points).toFixed(2)}</b><br>
           🏵️ মোট স্ট্যাম্প: <b>${m.stamps} / ২০ টি</b><br>
-          🎖️ স্ট্যাটাস: <b style="color: var(--gold-accent);">${m.status}</b>
+          🎖️ স্ট্যাটাস: <b style="color: var(--gold-accent);">${escapeHTML(m.status)}</b>
         `;
 
         document.getElementById('cardIdInput').value = cardId;
@@ -763,7 +849,8 @@
       } else {
         box.style.display = 'block';
         actionRow.style.display = 'none';
-        box.innerHTML = `⚠️ এই কার্ড আইডিটি (${cardId}) ডেটাবেসে পাওয়া যায়নি।`;
+        box.innerHTML = `⚠️ এই কার্ড আইডিটি (${escapeHTML(cardId)}) ডেটাবেসে পাওয়া যায়নি। সঠিক আইডি দিন।`;
+        alert(`⚠️ স্ক্যান করা কার্ড আইডি (${cardId}) ডেটাবেসে পাওয়া যায়নি!`);
       }
     }
 
@@ -782,9 +869,14 @@
         html5QrCode = new Html5Qrcode("reader");
         html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 200, height: 200 } },
           decodedText => {
-            const cleanID = decodedText.trim().toUpperCase();
-            document.getElementById('posCardID').value = cleanID;
-            selectPosMember(cleanID);
+            let rawText = decodedText.trim();
+            let parsedId = rawText.split('|')[0].trim().toUpperCase();
+            if (membersDatabase[parsedId]) {
+              document.getElementById('posCardID').value = parsedId;
+              selectPosMember(parsedId);
+            } else {
+              alert(`⚠️ স্ক্যান করা কার্ড আইডি (${parsedId}) ডেটাবেসে পাওয়া যায়নি!`);
+            }
             stopScanner();
           }, err => {}
         ).catch(err => { alert("ক্যামেরা অন করা যায়নি।"); readerDiv.style.display = 'none'; });
@@ -795,9 +887,54 @@
       if (html5QrCode) html5QrCode.stop().then(() => document.getElementById('reader').style.display = 'none');
     }
 
+    // MULTI-PREFIX LOOP CLEANING FOR BANGLADESHI NAMES
+    function cleanNameForComparison(nameStr) {
+      if (!nameStr) return "";
+      let cleaned = nameStr.toLowerCase().trim();
+      const prefixes = ['md', 'md.', 'muhammad', 'mohammad', 'mohmad', 'মোঃ', 'মোহাম্মদ', 'মো.', 'syed', 'sheikh', 'abdul'];
+      
+      let changed = true;
+      while (changed) {
+        changed = false;
+        for (let prefix of prefixes) {
+          if (cleaned.startsWith(prefix + ' ')) {
+            cleaned = cleaned.replace(prefix + ' ', '').trim();
+            changed = true;
+          }
+        }
+      }
+      return cleaned;
+    }
+
+    function logGiftRecord(cardId, name, phone, reason) {
+      const giftTx = {
+        id: String(Date.now()),
+        timestamp: new Date().toLocaleString('bn-BD'),
+        type: 'member',
+        cardID: cardId,
+        name: name,
+        phone: phone,
+        txType: 'gift_claim',
+        amount: 0.00,
+        points: 0,
+        visits: 0,
+        note: reason
+      };
+      transactions.unshift(giftTx);
+      renderHistory();
+
+      fetch(TRANSACTIONS_SCRIPT_URL, {
+        method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(giftTx)
+      }).catch(err => console.error(err));
+    }
+
     function processSale(e) {
       e.preventDefault();
-      const name = document.getElementById('posName').value.trim();
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+
+      const inputName = document.getElementById('posName').value.trim();
       const phone = document.getElementById('posPhone').value.trim();
       const amount = parseFloat(document.getElementById('posAmount').value) || 0;
       const txType = document.getElementById('posTxType').value;
@@ -808,47 +945,93 @@
       let stampsEarned = 0;
 
       if (activeCustomerType === 'member') {
-        cardID = document.getElementById('posCardID').value.trim().toUpperCase() || "SKR-GUEST";
-        let currentMember = membersDatabase[cardID] || { cardID: cardID, name: name, phone: phone, stamps: 0, points: 0, status: "সাকুরা মেম্বার" };
+        let inputQuery = document.getElementById('posCardID').value.trim().toUpperCase();
+        if (!inputQuery) {
+          alert("⚠️ মেম্বার কাস্টমারের জন্য কার্ড আইডি বা ফোন নম্বর আবশ্যক!");
+          submitBtn.disabled = false;
+          return;
+        }
+
+        let foundMember = membersDatabase[inputQuery];
+        if (!foundMember) {
+          foundMember = Object.values(membersDatabase).find(m => m.phone === inputQuery);
+        }
+
+        if (!foundMember) {
+          alert(`⚠️ প্রদত্ত আইডি বা ফোন নম্বর (${inputQuery}) সিস্টেম ডেটাবেসে পাওয়া যায়নি!`);
+          submitBtn.disabled = false;
+          return;
+        }
+
+        cardID = foundMember.cardID;
+        let currentMember = foundMember;
+
+        // STRICT CHECK FOR REDEEM OR SALE
+        const regClean = cleanNameForComparison(currentMember.name);
+        const entClean = cleanNameForComparison(inputName);
+        
+        let phoneMatch = false;
+        if (phone && currentMember.phone) {
+          let cleanInputPhone = phone.replace(/[^0-9]/g, '').slice(-4);
+          let cleanDbPhone = currentMember.phone.replace(/[^0-9]/g, '').slice(-4);
+          if (cleanInputPhone.length === 4 && cleanInputPhone === cleanDbPhone) phoneMatch = true;
+        }
+
+        if (regClean !== entClean && !phoneMatch) {
+          const confirmName = confirm(`⚠️ কঠোর সিকিউরিটি সতর্কবার্তা:\nসিস্টেমে রেজিস্টার্ড নাম: "${currentMember.name}"\nআপনি লিখেছেন: "${inputName}"\n\nনামের সম্পূর্ণ মিল পাওয়া যায়নি এবং ফোনের শেষ ৪ অঙ্কও মেলেনি! আপনি কি নিশ্চিত যে ইনিই সঠিক সদস্য?`);
+          if (!confirmName) {
+            submitBtn.disabled = false;
+            return;
+          }
+        }
+
+        const todayStr = new Date().toISOString().split('T')[0];
 
         if (txType === 'sale') {
-          // 1 Point per 100 BDT
           pointsEarned = amount / 100;
 
-          // Happy Hour Check: Sunday only, between 3 PM (15:00) and 4 PM (16:00) -> double stamps (+2)
           const now = new Date();
-          const currentDay = now.getDay(); // 0 = Sunday
+          const isSunday = now.getDay() === 0;
           const currentHour = now.getHours();
-          const stampIncrement = (currentDay === 0 && currentHour >= 15 && currentHour < 16) ? 2 : 1;
+          const stampValue = (isSunday && currentHour >= 15 && currentHour < 16) ? 2 : 1;
 
-          if (amount >= 100) stampsEarned = stampIncrement;
+          if (amount >= 100) {
+            if (currentMember.lastStampDate === todayStr) {
+              stampsEarned = 0; 
+            } else {
+              stampsEarned = stampValue;
+              currentMember.lastStampDate = todayStr;
+            }
+          }
 
           currentMember.stamps = (currentMember.stamps || 0) + stampsEarned;
           currentMember.points = (currentMember.points || 0) + pointsEarned;
 
-          // Gift Milestone Check
           if (amount >= 2000) {
-            alert("🎁 বিশেষ ধামাকা! ৳২০০০ বা তার বেশি কেনাকাটায় কাস্টমারের জন্য বিশেষ আকর্ষণীয় উপহার প্রস্তুত!");
+            alert("🎁 বিশেষ ধামাকা! ৳২০০০ বা তার বেশি কেনাকাটায় বিশেষ উপহার প্রস্তুত!");
+            logGiftRecord(cardID, inputName, phone, "৳২০০০+ কেনাকাটায় উপহার ক্লাইম");
           }
 
-          // STAMP RESET (Stamps = 0) & STATUS UPGRADE BACKEND LOGIC
           if (currentMember.stamps >= 20) {
-            currentMember.stamps = 0; // RESET BACKEND STAMPS TO 0
+            currentMember.stamps = currentMember.stamps - 20; 
             currentMember.status = "সাকুরা গোল্ড মেম্বার";
-            alert("🎉 অভিনন্দন! কাস্টমারের ২০টি স্ট্যাম্প পূর্ণ হয়েছে! তিনি পাচ্ছেন ৫০ টাকা মূল্যের ফ্রি মিনি তেল/উপহার এবং উনার স্ট্যাটাস 'সাকুরা গোল্ড মেম্বার'-এ আপগ্রেড করা হয়েছে!");
+            alert("🎉 অভিনন্দন! ২০ স্ট্যাম্প পূর্ণ হয়েছে! কাস্টমার পাচ্ছেন ৳৫০ মূল্যের ফ্রি উপহার এবং স্ট্যাটাস 'সাকুরা গোল্ড মেম্বার' হলো!");
+            logGiftRecord(cardID, inputName, phone, "২০ স্ট্যাম্প পূরণে ৳৫০ ফ্রি উপহার ক্লাইম");
           }
 
           membersDatabase[cardID] = currentMember;
-          saveMemberToBackend(currentMember); // IMMEDIATELY PUSH STAMP RESET TO GOOGLE SHEETS
+          saveMemberToBackend(currentMember); 
 
         } else if (txType === 'redeem') {
           if (currentMember.points < 50) {
-            alert("⚠️ রিডিম ব্যর্থ! পয়েন্ট দিয়ে ছাড় পাওয়ার জন্য অ্যাকাউন্টে কমপক্ষে ৫০ পয়েন্ট থাকতে হবে।");
+            alert("⚠️ রিডিম ব্যর্থ! পয়েন্ট দিয়ে ছাড় পাওয়ার জন্য কমপক্ষে ৫০ পয়েন্ট থাকতে হবে।");
+            submitBtn.disabled = false;
             return;
           }
 
-          if (50 > amount) {
-            alert("⚠️ প্রফিট প্রোটেকশন ব্লক: ডিসকাউন্টের পরিমাণ মোট বিলের থেকে বেশি হতে পারবে না।");
+          if (amount < 50) {
+            alert("⚠️ প্রফিট প্রোটেকশন ব্লক: ডিসকাউন্ট নেওয়ার জন্য নেট বিল অন্তত ৳৫০ হতে হবে।");
+            submitBtn.disabled = false;
             return;
           }
 
@@ -864,12 +1047,13 @@
         timestamp: new Date().toLocaleString('bn-BD'),
         type: activeCustomerType,
         cardID: cardID,
-        name: name,
+        name: inputName,
         phone: phone,
         txType: txType,
         amount: amount,
         points: pointsEarned,
-        visits: stampsEarned
+        visits: stampsEarned,
+        note: txType === 'redeem' ? 'পয়েন্ট ডিসকাউন্ট (রিডিম)' : (txType === 'sale' ? 'সাধারণ কেনাকাটা' : 'অন্যান্য')
       };
 
       lastReceiptData = newTx;
@@ -888,6 +1072,8 @@
       document.getElementById('posCardID').value = '';
       document.getElementById('posName').value = '';
       document.getElementById('posPhone').value = '';
+      
+      setTimeout(() => { submitBtn.disabled = false; }, 1500);
     }
 
     function showReceiptModal(tx) {
@@ -896,10 +1082,13 @@
       document.getElementById('rcptName').innerText = tx.name;
       document.getElementById('rcptCard').innerText = tx.cardID;
       document.getElementById('rcptPhone').innerText = tx.phone || 'নেই';
-      document.getElementById('rcptVisits').innerText = tx.visits ? `+${tx.visits} স্ট্যাম্প যুক্ত হয়েছে` : 'প্রযোজ্য নয়';
-      document.getElementById('rcptAmount').innerText = `৳ ${tx.amount.toFixed(2)}`;
-      document.getElementById('rcptPoints').innerText = `${tx.points >= 0 ? '+' : ''}${tx.points.toFixed(2)} পয়েন্ট`;
+      document.getElementById('rcptVisits').innerText = tx.visits ? `+${tx.visits} স্ট্যাম্প যুক্ত হয়েছে` : (tx.note || 'স্ট্যাম্প প্রযোজ্য নয়');
+      document.getElementById('rcptAmount').innerText = `৳ ${parseFloat(tx.amount || 0).toFixed(2)}`;
+      document.getElementById('rcptPoints').innerText = `${parseFloat(tx.points || 0) >= 0 ? '+' : ''}${parseFloat(tx.points || 0).toFixed(2)} পয়েন্ট`;
       
+      const waBtn = document.getElementById('whatsappReceiptBtn');
+      waBtn.onclick = () => sendWhatsAppDirect(tx);
+
       document.getElementById('receiptModal').style.display = 'flex';
     }
 
@@ -914,33 +1103,28 @@
       });
     }
 
-    function sendWhatsAppReceiptModal() {
-      if (lastReceiptData) sendWhatsAppDirect(lastReceiptData);
-    }
-
     function sendWhatsAppDirect(t) {
       let rawPhone = t.phone ? t.phone.replace(/[^0-9]/g, '') : '';
       let formattedPhone = rawPhone;
       if (rawPhone.length === 11 && rawPhone.startsWith('01')) formattedPhone = '88' + rawPhone;
 
       let currentMember = membersDatabase[t.cardID] || { points: 0 };
-      let remainingPointsForRedeem = Math.max(0, 50 - (currentMember.points || 0));
+      let remainingPoints = Math.max(0, 50 - (parseFloat(currentMember.points) || 0));
 
       const msg = `🌸 *সাকুরা মার্কেট (আম্বরখানা, সিলেট)* 🌸\n` +
                   `📦 ডিজিটাল ই-রসিদ ও মেম্বারশিপ আপডেট\n\n` +
                   `👤 নাম: ${t.name}\n` +
                   `🆔 কার্ড: ${t.cardID}\n` +
-                  `💰 মোট পরিমাণ: ৳${t.amount.toFixed(2)}\n` +
-                  `⭐ অর্জিত পয়েন্ট: ${t.points >= 0 ? '+' : ''}${t.points.toFixed(2)}\n` +
+                  `💰 নেট বিল: ৳${parseFloat(t.amount || 0).toFixed(2)}\n` +
+                  `⭐ অর্জিত পয়েন্ট: ${parseFloat(t.points || 0) >= 0 ? '+' : ''}${parseFloat(t.points || 0).toFixed(2)}\n` +
                   `🕒 সময়: ${t.timestamp}\n\n` +
-                  `💡 পরবর্তী ৳৫০ ক্যাশব্যাক ছাড়ের জন্য আর মাত্র [${remainingPointsForRedeem.toFixed(2)}] পয়েন্ট বাকি!\n\n` +
+                  `💡 ৫০ পয়েন্ট জমলেই সরাসরি ৳৫০ ছাড়! (আর মাত্র ${remainingPoints.toFixed(2)} পয়েন্ট বাকি)\n\n` +
                   `ধন্যবাদ আমাদের সাথে থাকার জন্য!`;
 
       const whatsappURL = formattedPhone ? `https://wa.me/${formattedPhone}?text=${encodeURIComponent(msg)}` : `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
       window.open(whatsappURL, '_blank');
     }
 
-    /* VIRTUAL MEMBERSHIP CARD WHATSAPP INTEGRATION */
     function openVirtualCardForCurrentHubMember() {
       if (!currentSelectedMemberID || !membersDatabase[currentSelectedMemberID]) {
         alert("⚠️ মেম্বার নির্বাচন করুন।");
@@ -956,19 +1140,17 @@
 
       const qrDiv = document.getElementById('virtualQrcode');
       qrDiv.innerHTML = "";
-      new QRCode(qrDiv, { text: m.cardID, width: 58, height: 58, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
+      new QRCode(qrDiv, { text: m.cardID, width: 64, height: 64, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.L });
+
+      const waCardBtn = document.getElementById('whatsappVirtualCardBtn');
+      waCardBtn.onclick = () => sendVirtualCardViaWhatsApp(m);
 
       document.getElementById('virtualCardModal').style.display = 'flex';
     }
 
-    function closeVirtualCardModal() {
-      document.getElementById('virtualCardModal').style.display = 'none';
-    }
+    function closeVirtualCardModal() { document.getElementById('virtualCardModal').style.display = 'none'; }
 
-    function sendVirtualCardViaWhatsApp() {
-      if (!currentSelectedMemberID || !membersDatabase[currentSelectedMemberID]) return;
-      const m = membersDatabase[currentSelectedMemberID];
-
+    function sendVirtualCardViaWhatsApp(m) {
       let rawPhone = m.phone ? m.phone.replace(/[^0-9]/g, '') : '';
       let formattedPhone = rawPhone;
       if (rawPhone.length === 11 && rawPhone.startsWith('01')) formattedPhone = '88' + rawPhone;
@@ -979,7 +1161,7 @@
                   `🏵️ *বর্তমান স্ট্যাম্প:* ${m.stamps} / 20\n` +
                   `⭐ *জমা পয়েন্ট:* ${parseFloat(m.points).toFixed(2)}\n` +
                   `🎖️ *স্ট্যাটাস:* ${m.status}\n\n` +
-                  `💡 কার্ড ভুলে গেলেও দোকানে এসে শুধু আপনার এই আইডি বা ফোন নম্বরটি বললেই সমস্ত ছাড় ও উপহার পাবেন!\n\n` +
+                  `💡 বিল পরিশোধের সময় আপনার নাম ও মেম্বার আইডি বললেই সব ছাড় ও ফ্রি উপহার মিলবে!\n\n` +
                   `📍 ঠিকানা: শাহীন স্কুলের পাশে, আম্বরখানা, সিলেট\n` +
                   `📞 হেল্পলাইন: 01789504376`;
 
@@ -1003,21 +1185,39 @@
         return;
       }
 
-      tbody.innerHTML = transactions.slice(0, 15).map(t => `
-        <tr>
-          <td>${t.timestamp}</td>
-          <td><b>${t.name}</b><br><small style="color: var(--text-muted);">${t.cardID}</small></td>
-          <td><span class="badge ${t.type === 'member' ? 'badge-member' : 'badge-guest'}">${t.type === 'member' ? 'মেম্বার' : 'গেস্ট'}</span></td>
-          <td>৳ ${parseFloat(t.amount || 0).toFixed(2)}</td>
-          <td style="color: ${parseFloat(t.points || 0) >= 0 ? 'var(--green-status)' : 'red'};">
-            ${parseFloat(t.points || 0) >= 0 ? '+' : ''}${parseFloat(t.points || 0).toFixed(2)} পঃ
-            ${t.visits ? `<br><small style="color:var(--gold-accent);">+${t.visits} স্ট্যাম্প</small>` : ''}
+      tbody.innerHTML = "";
+      transactions.slice(0, 15).forEach(t => {
+        const tr = document.createElement('tr');
+        
+        const isPositive = parseFloat(t.points || 0) >= 0;
+        const safeVisits = escapeHTML(String(t.visits || ''));
+        const safeAmount = parseFloat(t.amount || 0).toFixed(2);
+        const displayNote = escapeHTML(t.note || (t.txType === 'gift_claim' ? 'উপহার ক্লাইম' : (t.txType === 'registration_fee' ? 'রেজিস্ট্রেশন ফি' : 'কেনাকাটা')));
+
+        tr.innerHTML = `
+          <td>${escapeHTML(t.timestamp)}</td>
+          <td><b>${escapeHTML(t.name)}</b><br><small style="color: var(--text-muted);">${escapeHTML(t.cardID)}</small></td>
+          <td><span class="badge ${t.type === 'member' ? 'badge-member' : 'badge-guest'}">${t.type === 'member' ? 'মেম্বার' : 'গেস্ট'}</span><br><small style="color: var(--gold-accent);">${displayNote}</small></td>
+          <td>৳ ${safeAmount}</td>
+          <td style="color: ${isPositive ? 'var(--green-status)' : 'red'};">
+            ${isPositive ? '+' : ''}${parseFloat(t.points || 0).toFixed(2)} পঃ
+            ${safeVisits && safeVisits !== '0' ? `<br><small style="color:var(--gold-accent);">+${safeVisits} স্ট্যাম্প</small>` : ''}
           </td>
-          <td>
-            <button class="btn btn-whatsapp" style="padding: 4px 8px; font-size: 0.78rem; display: inline-flex;" onclick='sendWhatsAppDirect(${JSON.stringify(t)})'><i class="fa-brands fa-whatsapp"></i></button>
-          </td>
-        </tr>
-      `).join('');
+          <td></td>
+        `;
+
+        const actionTd = tr.querySelector('td:last-child');
+        const waBtn = document.createElement('button');
+        waBtn.className = 'btn btn-whatsapp';
+        waBtn.style.padding = '4px 8px';
+        waBtn.style.fontSize = '0.78rem';
+        waBtn.style.display = 'inline-flex';
+        waBtn.innerHTML = '<i class="fa-brands fa-whatsapp"></i>';
+        waBtn.addEventListener('click', () => sendWhatsAppDirect(t));
+        actionTd.appendChild(waBtn);
+
+        tbody.appendChild(tr);
+      });
     }
 
     function updateMetrics() {
@@ -1037,11 +1237,14 @@
     function updateQRCode(text) {
       const qrDiv = document.getElementById('qrcode');
       qrDiv.innerHTML = "";
-      new QRCode(qrDiv, { text: text, width: 58, height: 58, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
+      new QRCode(qrDiv, { text: text, width: 64, height: 64, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.L });
     }
 
     function updateCardVisual() {
-      document.getElementById('cardVisualName').innerText = document.getElementById('cardNameInput').value || '...................';
+      const nameVal = document.getElementById('cardNameInput').value || '...................';
+      const idVal = document.getElementById('cardIdInput').value || 'SKR-000000';
+      document.getElementById('cardVisualName').innerText = nameVal;
+      updateQRCode(idVal);
     }
 
     function downloadCardPNG() {

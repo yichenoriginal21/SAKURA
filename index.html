@@ -314,7 +314,7 @@
           <p id="netIncomeDisplay">৳ 0.00</p>
         </div>
         <div class="metric-card">
-          <h3>ইস্যুকৃত পয়েন্ট</h3>
+          <h3>মোট ইস্যুকৃত পয়েন্ট</h3>
           <p class="gold" id="netPointsDisplay">0.00</p>
         </div>
       </div>
@@ -762,9 +762,9 @@
         phone: phone,
         txType: 'registration_fee',
         amount: 15.00,
-        points: 0,
+        points: 2.00,
         visits: 1,
-        note: 'নতুন মেম্বার রেজিস্ট্রেশন ফি (৳১৫) ও ১ম স্ট্যাম্প'
+        note: 'নতুন মেম্বার রেজিস্ট্রেশন (৳১৫ ফি, ২ পয়েন্ট, ১ স্ট্যাম্প)'
       };
       transactions.unshift(regFeeTx);
       renderHistory();
@@ -775,7 +775,7 @@
         body: JSON.stringify(regFeeTx)
       }).catch(err => console.error(err));
 
-      alert(`🎉 নতুন মেম্বার সফলভাবে নিবন্ধিত হয়েছে!\n💵 ৳১৫ রেজিস্ট্রেশন ফি ক্যাশ আদায় করা হয়েছে এবং সাথে ইনস্ট্যান্ট ২ পয়েন্ট ও ১টি স্ট্যাম্প যুক্ত করা হয়েছে!`);
+      alert(`🎉 নতুন মেম্বার সফলভাবে নিবন্ধিত হয়েছে!\n💵 ৳১৫ রেজিস্ট্রেশন ফি আদায় করা হয়েছে এবং সাথে ইনস্ট্যান্ট ২ পয়েন্ট ও ১টি স্ট্যাম্প যুক্ত করা হয়েছে!`);
       loadHubMemberDirect(cardId);
       setTimeout(() => { btn.disabled = false; }, 2000);
     }
@@ -995,15 +995,16 @@
 
           if (amount >= 100) {
             if (currentMember.lastStampDate === todayStr) {
-              stampsEarned = 0; 
+              stampsEarned = 0; // আজকের দিনে অলরেডি স্ট্যাম্প পেয়ে গেছে, নতুন করে আর পাবে না
             } else {
               stampsEarned = stampValue;
-              currentMember.lastStampDate = todayStr;
+              currentMember.lastStampDate = todayStr; // আজকের তারিখ আপডেট হলো
             }
           }
 
-          currentMember.stamps = (currentMember.stamps || 0) + stampsEarned;
-          currentMember.points = (currentMember.points || 0) + pointsEarned;
+          // স্ট্যাম্প রিসেট না করে পূর্বের স্ট্যাম্পের সাথে নতুন স্ট্যাম্প নিখুঁতভাবে যোগ করা হলো
+          currentMember.stamps = parseInt(currentMember.stamps || 0) + stampsEarned;
+          currentMember.points = parseFloat(currentMember.points || 0) + pointsEarned;
 
           if (amount >= 2000) {
             alert("🎁 বিশেষ ধামাকা! ৳২০০০ বা তার বেশি কেনাকাটায় বিশেষ উপহার প্রস্তুত!");
@@ -1220,9 +1221,15 @@
 
     function updateMetrics() {
       const totalIncome = transactions.reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
-      const totalPoints = transactions.reduce((sum, t) => sum + parseFloat(t.points || 0), 0);
+      
+      // মোট ইস্যুকৃত পয়েন্টের সঠিক হিসাব (প্লাস পয়েন্টগুলোর যোগফল)
+      const totalIssuedPoints = transactions.reduce((sum, t) => {
+        let pts = parseFloat(t.points || 0);
+        return pts > 0 ? sum + pts : sum;
+      }, 0);
+
       document.getElementById('netIncomeDisplay').innerText = `৳ ${totalIncome.toLocaleString('bn-BD', {minimumFractionDigits: 2})}`;
-      document.getElementById('netPointsDisplay').innerText = totalPoints.toFixed(2);
+      document.getElementById('netPointsDisplay').innerText = totalIssuedPoints.toFixed(2);
     }
 
     function generateNewCardID() {

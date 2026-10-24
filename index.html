@@ -763,8 +763,8 @@
         txType: 'registration_fee',
         amount: 15.00,
         points: 0,
-        visits: 0,
-        note: 'নতুন মেম্বার রেজিস্ট্রেশন ফি (৳১৫)'
+        visits: 1,
+        note: 'নতুন মেম্বার রেজিস্ট্রেশন ফি (৳১৫) ও ১ম স্ট্যাম্প'
       };
       transactions.unshift(regFeeTx);
       renderHistory();
@@ -775,7 +775,7 @@
         body: JSON.stringify(regFeeTx)
       }).catch(err => console.error(err));
 
-      alert(`🎉 নতুন মেম্বার সফলভাবে নিবন্ধিত হয়েছে!\n💵 ৳১৫ রেজিস্ট্রেশন ফি ক্যাশ হিসাবে সংগ্রহ করুন এবং সিস্টেমে যুক্ত করা হলো।`);
+      alert(`🎉 নতুন মেম্বার সফলভাবে নিবন্ধিত হয়েছে!\n💵 ৳১৫ রেজিস্ট্রেশন ফি ক্যাশ আদায় করা হয়েছে এবং সাথে ইনস্ট্যান্ট ২ পয়েন্ট ও ১টি স্ট্যাম্প যুক্ত করা হয়েছে!`);
       loadHubMemberDirect(cardId);
       setTimeout(() => { btn.disabled = false; }, 2000);
     }
@@ -887,7 +887,6 @@
       if (html5QrCode) html5QrCode.stop().then(() => document.getElementById('reader').style.display = 'none');
     }
 
-    // MULTI-PREFIX LOOP CLEANING FOR BANGLADESHI NAMES
     function cleanNameForComparison(nameStr) {
       if (!nameStr) return "";
       let cleaned = nameStr.toLowerCase().trim();
@@ -966,7 +965,6 @@
         cardID = foundMember.cardID;
         let currentMember = foundMember;
 
-        // STRICT CHECK FOR REDEEM OR SALE
         const regClean = cleanNameForComparison(currentMember.name);
         const entClean = cleanNameForComparison(inputName);
         
@@ -1192,7 +1190,7 @@
         const isPositive = parseFloat(t.points || 0) >= 0;
         const safeVisits = escapeHTML(String(t.visits || ''));
         const safeAmount = parseFloat(t.amount || 0).toFixed(2);
-        const displayNote = escapeHTML(t.note || (t.txType === 'gift_claim' ? 'উপহার ক্লাইম' : (t.txType === 'registration_fee' ? 'রেজিস্ট্রেশন ফি' : 'কেনাকাটা')));
+        const displayNote = escapeHTML(t.note || (t.txType === 'gift_claim' ? 'উপহার ক্লাইম' : (t.txType === 'registration_fee' ? 'রেজিস্ট্রেশন ফি ও স্ট্যাম্প' : 'কেনাকাটা')));
 
         tr.innerHTML = `
           <td>${escapeHTML(t.timestamp)}</td>
